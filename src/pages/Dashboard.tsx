@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { FileText, Plus, Trash2, Pencil, Copy } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CoverLetterForm } from "@/components/CoverLetterForm";
+import { LetterViewDialog } from "@/components/LetterViewDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +18,8 @@ const Dashboard = () => {
   const [showForm, setShowForm] = useState(false);
   const [letters, setLetters] = useState<any[]>([]);
   const [loadingLetters, setLoadingLetters] = useState(true);
+  const [selectedLetter, setSelectedLetter] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -83,6 +86,11 @@ const Dashboard = () => {
       title: "Lettre copiée",
       description: "La lettre a été copiée dans le presse-papiers",
     });
+  };
+
+  const openLetter = (letter: any) => {
+    setSelectedLetter(letter);
+    setIsDialogOpen(true);
   };
 
   if (loading) {
@@ -157,8 +165,18 @@ const Dashboard = () => {
                   <TableBody>
                     {letters.map((letter) => (
                       <TableRow key={letter.id}>
-                        <TableCell className="font-medium">{letter.company_name}</TableCell>
-                        <TableCell>{letter.job_title}</TableCell>
+                        <TableCell 
+                          className="font-medium cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => openLetter(letter)}
+                        >
+                          {letter.company_name}
+                        </TableCell>
+                        <TableCell 
+                          className="cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => openLetter(letter)}
+                        >
+                          {letter.job_title}
+                        </TableCell>
                         <TableCell>{new Date(letter.created_at).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -173,6 +191,7 @@ const Dashboard = () => {
                             <Button
                               size="sm"
                               variant="ghost"
+                              onClick={() => openLetter(letter)}
                               title="Modifier la lettre"
                             >
                               <Pencil className="w-4 h-4" />
@@ -200,6 +219,13 @@ const Dashboard = () => {
           </div>
         )}
       </main>
+
+      <LetterViewDialog
+        letter={selectedLetter}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onUpdate={fetchLetters}
+      />
     </div>
   );
 };
