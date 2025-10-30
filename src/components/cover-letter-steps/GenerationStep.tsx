@@ -81,12 +81,26 @@ export const GenerationStep = ({
   };
 
   const saveLetter = async () => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Erreur",
+        description: "Vous devez être connecté pour sauvegarder une lettre",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setSaving(true);
     try {
+      // Vérifier que la session est valide
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Session invalide. Veuillez vous reconnecter.");
+      }
+
       const { error } = await supabase.from("cover_letters").insert({
-        user_id: user.id,
+        user_id: session.user.id,
         job_title: jobTitle,
         company_name: companyName,
         job_description: jobDescription,
