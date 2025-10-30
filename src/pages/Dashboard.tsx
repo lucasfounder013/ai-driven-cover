@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, Download, Trash2 } from "lucide-react";
+import { FileText, Plus, Trash2, Pencil, Copy } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CoverLetterForm } from "@/components/CoverLetterForm";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,14 +77,12 @@ const Dashboard = () => {
     }
   };
 
-  const downloadLetter = (letter: any) => {
-    const element = document.createElement("a");
-    const file = new Blob([letter.generated_letter], { type: "text/plain" });
-    element.href = URL.createObjectURL(file);
-    element.download = `lettre_motivation_${letter.company_name}_${new Date(letter.created_at).toLocaleDateString()}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+  const copyLetter = (letter: any) => {
+    navigator.clipboard.writeText(letter.generated_letter);
+    toast({
+      title: "Lettre copiée",
+      description: "La lettre a été copiée dans le presse-papiers",
+    });
   };
 
   if (loading) {
@@ -145,50 +144,53 @@ const Dashboard = () => {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {letters.map((letter) => (
-                  <Card key={letter.id} className="p-6 space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg text-foreground mb-1">
-                          {letter.job_title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {letter.company_name}
-                        </p>
-                      </div>
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-5 h-5 text-primary" />
-                      </div>
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground line-clamp-3">
-                      {letter.generated_letter}
-                    </p>
-
-                    <div className="flex items-center justify-between pt-2 border-t border-border">
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(letter.created_at).toLocaleDateString()}
-                      </span>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => downloadLetter(letter)}
-                        >
-                          <Download className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => deleteLetter(letter.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nom de l'entreprise</TableHead>
+                      <TableHead>Poste</TableHead>
+                      <TableHead>Création</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {letters.map((letter) => (
+                      <TableRow key={letter.id}>
+                        <TableCell className="font-medium">{letter.company_name}</TableCell>
+                        <TableCell>{letter.job_title}</TableCell>
+                        <TableCell>{new Date(letter.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => copyLetter(letter)}
+                              title="Copier la lettre"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              title="Modifier la lettre"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => deleteLetter(letter.id)}
+                              title="Supprimer la lettre"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             )}
           </>
