@@ -40,6 +40,8 @@ export const CoverLetterForm = () => {
     setCompanyName("");
     setJobDescription("");
     setGeneratedLetter("");
+    // Recharger la page pour revenir au dashboard
+    window.location.reload();
   };
 
   return (
