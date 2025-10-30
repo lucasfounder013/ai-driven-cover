@@ -1,7 +1,10 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Gradient Background */}
@@ -35,11 +38,21 @@ const HeroSection = () => {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom-7 duration-700 delay-500">
-          <Button variant="hero" size="xl" className="gap-2 min-w-[280px]">
+          <Button 
+            variant="hero" 
+            size="xl" 
+            className="gap-2 min-w-[280px]"
+            onClick={() => navigate('/auth')}
+          >
             <Sparkles className="w-5 h-5" />
             Créer ma lettre gratuitement
           </Button>
-          <Button variant="outline-white" size="xl" className="min-w-[200px]">
+          <Button 
+            variant="outline-white" 
+            size="xl" 
+            className="min-w-[200px]"
+            onClick={() => navigate('/auth')}
+          >
             Se connecter
           </Button>
         </div>

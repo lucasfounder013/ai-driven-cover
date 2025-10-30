@@ -1,7 +1,16 @@
 import { FileText, User, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const DashboardHeader = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
   return (
     <header className="border-b border-border bg-background">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -16,11 +25,14 @@ const DashboardHeader = () => {
         </div>
 
         <div className="flex items-center gap-6">
-          <button className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
+          <div className="flex items-center gap-2 text-foreground">
             <User className="w-5 h-5" />
-            <span className="font-medium">Tableau de bord</span>
-          </button>
-          <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+            <span className="font-medium">{user?.email}</span>
+          </div>
+          <button 
+            onClick={handleSignOut}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
             <LogOut className="w-5 h-5" />
             <span className="font-medium">Déconnexion</span>
           </button>
