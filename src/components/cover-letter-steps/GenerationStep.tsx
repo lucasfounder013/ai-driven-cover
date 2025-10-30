@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Download, RotateCcw, Sparkles } from "lucide-react";
@@ -30,11 +30,6 @@ export const GenerationStep = ({
   const { toast } = useToast();
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (!generatedLetter) {
-      generateLetter();
-    }
-  }, []);
 
   const generateLetter = async () => {
     if (!user) return;
@@ -149,6 +144,26 @@ export const GenerationStep = ({
         <p className="text-muted-foreground">
           Claude est en train de rédiger votre lettre de motivation
         </p>
+      </div>
+    );
+  }
+
+  if (!generatedLetter) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 space-y-6">
+        <Sparkles className="w-20 h-20 text-primary" />
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold text-foreground">
+            Prêt à générer votre lettre de motivation
+          </h2>
+          <p className="text-muted-foreground">
+            Cliquez sur le bouton ci-dessous pour lancer la génération
+          </p>
+        </div>
+        <Button onClick={generateLetter} size="lg" className="mt-4">
+          <Sparkles className="w-5 h-5 mr-2" />
+          Générer ma lettre
+        </Button>
       </div>
     );
   }
