@@ -92,7 +92,7 @@ export const GenerationStep = ({
         job_description: jobDescription,
         cv_text: cvPath,
         generated_letter: generatedLetter,
-        status: "generated",
+        status: "final",
       });
 
       if (error) throw error;
