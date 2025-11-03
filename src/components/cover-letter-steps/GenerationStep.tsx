@@ -28,6 +28,7 @@ export const GenerationStep = ({
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -40,12 +41,17 @@ export const GenerationStep = ({
       // Récupérer les informations du profil
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("first_name, last_name, phone_number, professional_email, linkedin_url")
+        .select("first_name, last_name, phone_number, professional_email, linkedin_url, avatar_url")
         .eq("id", user.id)
         .single();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
+      }
+
+      // Stocker l'avatar URL si disponible
+      if (profileData?.avatar_url) {
+        setAvatarUrl(profileData.avatar_url);
       }
 
       // Télécharger le PDF du CV
@@ -162,14 +168,36 @@ export const GenerationStep = ({
       const margin = 20;
       const maxWidth = pageWidth - (margin * 2);
       
+      let y = margin;
+      
+      // Ajouter la photo si disponible
+      if (avatarUrl) {
+        try {
+          const imgData = await fetch(avatarUrl).then(r => r.blob()).then(blob => {
+            return new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(blob);
+            });
+          });
+          
+          const imgWidth = 30;
+          const imgHeight = 30;
+          const imgX = pageWidth - margin - imgWidth;
+          doc.addImage(imgData, 'JPEG', imgX, y, imgWidth, imgHeight);
+          y += imgHeight + 10;
+        } catch (error) {
+          console.error("Error adding image to PDF:", error);
+        }
+      }
+      
       // Diviser le texte en lignes pour qu'il tienne dans la page
       const lines = doc.splitTextToSize(generatedLetter, maxWidth);
       
       // Ajouter le texte page par page
-      let y = margin;
       doc.setFontSize(11);
       
-      lines.forEach((line: string, index: number) => {
+      lines.forEach((line: string) => {
         if (y > pageHeight - margin) {
           doc.addPage();
           y = margin;
@@ -257,11 +285,30 @@ export const GenerationStep = ({
         </p>
       </div>
 
-      <Textarea
-        value={generatedLetter}
-        onChange={(e) => setGeneratedLetter(e.target.value)}
-        className="min-h-[400px] font-serif"
-      />
+      <div className="relative">
+        {avatarUrl && (
+          <div className="absolute top-4 right-4 z-10 flex items-start gap-2">
+            <img 
+              src={avatarUrl} 
+              alt="Photo de profil" 
+              className="w-24 h-24 rounded-lg object-cover border-2 border-border shadow-lg"
+            />
+            <Button
+              variant="destructive"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setAvatarUrl(null)}
+            >
+              ✕
+            </Button>
+          </div>
+        )}
+        <Textarea
+          value={generatedLetter}
+          onChange={(e) => setGeneratedLetter(e.target.value)}
+          className="min-h-[400px] font-serif"
+        />
+      </div>
 
       <div className="flex flex-wrap gap-3 justify-center">
         <Button onClick={copyLetter} variant="outline">
