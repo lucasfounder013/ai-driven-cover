@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,9 +17,23 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
-    }
+    const checkProfileCompletion = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('profile_completed')
+          .eq('id', user.id)
+          .single();
+        
+        if (data && !data.profile_completed) {
+          navigate('/profile');
+        } else {
+          navigate('/dashboard');
+        }
+      }
+    };
+    
+    checkProfileCompletion();
   }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {

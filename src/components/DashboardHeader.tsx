@@ -1,6 +1,7 @@
-import { FileText, User, LogOut } from "lucide-react";
+import { FileText, User, LogOut, UserCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const DashboardHeader = () => {
   const { user, signOut } = useAuth();
@@ -29,6 +30,15 @@ const DashboardHeader = () => {
             <User className="w-5 h-5" />
             <span className="font-medium">{user?.email}</span>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/profile')}
+            className="flex items-center gap-2"
+          >
+            <UserCircle className="w-5 h-5" />
+            <span className="font-medium">Profil</span>
+          </Button>
           <button 
             onClick={handleSignOut}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
