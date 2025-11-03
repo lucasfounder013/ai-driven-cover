@@ -11,7 +11,6 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { user, loading, signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -47,10 +46,7 @@ const Auth = () => {
       if (isLogin) {
         await signIn(email, password);
       } else {
-        if (!fullName.trim()) {
-          return;
-        }
-        await signUp(email, password, fullName);
+        await signUp(email, password);
       }
     } finally {
       setIsLoading(false);
@@ -82,21 +78,6 @@ const Auth = () => {
 
         <div className="bg-card border border-border rounded-xl p-8 shadow-lg">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Nom complet</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Jean Dupont"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required={!isLogin}
-                  disabled={isLoading}
-                />
-              </div>
-            )}
-
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
