@@ -5,9 +5,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import * as pdfjsLib from "pdfjs-dist";
+import * as mammoth from "mammoth";
 
-// Configure le worker PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// CORRECTION 1: Version fixe du worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 interface CVUploadStepProps {
   cvFile: File | null;
@@ -34,10 +35,22 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUplo
         fullText += pageText + "\n";
       }
 
-      return fullText;
+      return fullText.trim();
     } catch (error) {
       console.error("Error extracting text from PDF:", error);
       throw new Error("Impossible d'extraire le texte du PDF");
+    }
+  };
+
+  // CORRECTION 2: Nouvelle fonction pour Word
+  const extractTextFromWord = async (file: File): Promise<string> => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      return result.value.trim();
+    } catch (error) {
+      console.error("Error extracting text from Word:", error);
+      throw new Error("Impossible d'extraire le texte du fichier Word");
     }
   };
 
@@ -50,13 +63,12 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUplo
 
     console.log("File selected:", file.name, file.type, file.size);
 
-    // Vérifier le type de fichier
     const validTypes = [
       "application/pdf",
       "application/msword",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ];
-    
+
     if (!validTypes.includes(file.type)) {
       toast({
         title: "Format non supporté",
@@ -66,7 +78,6 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUplo
       return;
     }
 
-    // Vérifier la taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "Fichier trop volumineux",
@@ -82,34 +93,32 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUplo
       const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
-      // Extraire le texte du PDF
+      // CORRECTION 3: Extraction de texte améliorée
       let extractedText = "";
+
       if (file.type === "application/pdf") {
         console.log("Extracting text from PDF...");
-        try {
-          extractedText = await extractTextFromPDF(file);
-          console.log("Text extracted, length:", extractedText.length);
-        } catch (pdfError) {
-          console.error("PDF extraction failed:", pdfError);
-          toast({
-            title: "Avertissement",
-            description: "Impossible d'extraire le texte du PDF, mais le fichier sera uploadé",
-            variant: "destructive",
-          });
-        }
-      } else {
-        // Pour les fichiers Word, on lit directement comme texte (limité)
-        console.log("Reading text from Word file...");
-        extractedText = await file.text();
+        extractedText = await extractTextFromPDF(file);
+        console.log("Text extracted, length:", extractedText.length);
+      } else if (
+        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        file.type === "application/msword"
+      ) {
+        console.log("Extracting text from Word file...");
+        extractedText = await extractTextFromWord(file);
+        console.log("Text extracted, length:", extractedText.length);
+      }
+
+      // Vérifier que le texte a bien été extrait
+      if (!extractedText || extractedText.length < 10) {
+        throw new Error("Le fichier semble vide ou le texte n'a pas pu être extrait");
       }
 
       // Upload le fichier
       console.log("Uploading file to storage...");
-      const { error } = await supabase.storage
-        .from("cvs")
-        .upload(fileName, file, {
-          upsert: true
-        });
+      const { error } = await supabase.storage.from("cvs").upload(fileName, file, {
+        upsert: true,
+      });
 
       if (error) {
         console.error("Storage upload error:", error);
@@ -120,10 +129,10 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUplo
       setCvFile(file);
       setCvPath(fileName);
       setCvText(extractedText);
-      
+
       toast({
         title: "CV téléchargé et analysé",
-        description: "Votre CV a été uploadé avec succès",
+        description: `${extractedText.length} caractères extraits avec succès`,
       });
     } catch (error: any) {
       console.error("Error uploading CV:", error);
@@ -132,9 +141,12 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUplo
         description: error.message || "Impossible d'uploader le CV",
         variant: "destructive",
       });
+      // CORRECTION 4: Reset en cas d'erreur
+      setCvFile(null);
+      setCvPath("");
+      setCvText("");
     } finally {
       setUploading(false);
-      // Reset l'input pour permettre de sélectionner le même fichier
       e.target.value = "";
     }
   };
@@ -142,12 +154,8 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUplo
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          Téléchargez votre CV
-        </h2>
-        <p className="text-muted-foreground">
-          Uploadez votre CV au format PDF ou Word (max 5MB)
-        </p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Téléchargez votre CV</h2>
+        <p className="text-muted-foreground">Uploadez votre CV au format PDF ou Word (max 5MB)</p>
       </div>
 
       <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
@@ -184,9 +192,7 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUplo
                 disabled={uploading}
               />
             </div>
-            <p className="text-sm text-muted-foreground">
-              Formats acceptés : PDF, DOC, DOCX
-            </p>
+            <p className="text-sm text-muted-foreground">Formats acceptés : PDF, DOC, DOCX</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -195,9 +201,7 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUplo
             </div>
             <div>
               <p className="font-semibold text-foreground">{cvFile.name}</p>
-              <p className="text-sm text-muted-foreground">
-                {(cvFile.size / 1024).toFixed(2)} KB
-              </p>
+              <p className="text-sm text-muted-foreground">{(cvFile.size / 1024).toFixed(2)} KB</p>
             </div>
             <Button
               variant="outline"
