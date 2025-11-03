@@ -19,6 +19,7 @@ const Profile = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [professionalEmail, setProfessionalEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const hasCheckedAuth = useRef(false);
@@ -53,6 +54,7 @@ const Profile = () => {
       setFirstName(data.first_name || '');
       setLastName(data.last_name || '');
       setProfessionalEmail(data.professional_email || '');
+      setPhoneNumber(data.phone_number || '');
       setLinkedinUrl(data.linkedin_url || '');
       setAvatarUrl(data.avatar_url || '');
     }
@@ -102,7 +104,7 @@ const Profile = () => {
     e.preventDefault();
     if (!user) return;
 
-    if (!firstName.trim() || !lastName.trim() || !professionalEmail.trim()) {
+    if (!firstName.trim() || !lastName.trim() || !professionalEmail.trim() || !phoneNumber.trim()) {
       toast({
         title: 'Champs requis',
         description: 'Veuillez remplir tous les champs obligatoires.',
@@ -120,6 +122,7 @@ const Profile = () => {
           first_name: firstName,
           last_name: lastName,
           professional_email: professionalEmail,
+          phone_number: phoneNumber,
           linkedin_url: linkedinUrl,
           avatar_url: avatarUrl,
           profile_completed: true,
@@ -241,6 +244,21 @@ const Profile = () => {
                 placeholder="jean.dupont@entreprise.com"
                 value={professionalEmail}
                 onChange={(e) => setProfessionalEmail(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber">
+                Numéro de téléphone <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="phoneNumber"
+                type="tel"
+                placeholder="+33 6 12 34 56 78"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
                 required
                 disabled={isLoading}
               />

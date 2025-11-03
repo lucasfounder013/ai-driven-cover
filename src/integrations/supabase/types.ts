@@ -71,6 +71,7 @@ export type Database = {
           id: string
           last_name: string | null
           linkedin_url: string | null
+          phone_number: string | null
           professional_email: string | null
           profile_completed: boolean | null
           updated_at: string
@@ -84,6 +85,7 @@ export type Database = {
           id: string
           last_name?: string | null
           linkedin_url?: string | null
+          phone_number?: string | null
           professional_email?: string | null
           profile_completed?: boolean | null
           updated_at?: string
@@ -97,6 +99,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           linkedin_url?: string | null
+          phone_number?: string | null
           professional_email?: string | null
           profile_completed?: boolean | null
           updated_at?: string
