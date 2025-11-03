@@ -37,6 +37,17 @@ export const GenerationStep = ({
 
     setGenerating(true);
     try {
+      // Récupérer les informations du profil
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, phone_number, professional_email, linkedin_url")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+      }
+
       // Télécharger le PDF du CV
       const { data: cvData, error: downloadError } = await supabase.storage
         .from("cvs")
@@ -51,13 +62,23 @@ export const GenerationStep = ({
           .reduce((data, byte) => data + String.fromCharCode(byte), '')
       );
 
-      // Appeler l'edge function avec le PDF en base64
+      // Préparer les informations du profil
+      const profileInfo = profileData ? {
+        firstName: profileData.first_name || '',
+        lastName: profileData.last_name || '',
+        phoneNumber: profileData.phone_number || '',
+        professionalEmail: profileData.professional_email || '',
+        linkedinUrl: profileData.linkedin_url || ''
+      } : null;
+
+      // Appeler l'edge function avec le PDF en base64 et les infos du profil
       const { data, error } = await supabase.functions.invoke("generate-cover-letter", {
         body: {
           jobTitle,
           companyName,
           jobDescription,
           cvPdfBase64: base64,
+          profileInfo,
         },
       });
 

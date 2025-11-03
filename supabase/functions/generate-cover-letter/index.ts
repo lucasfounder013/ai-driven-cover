@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { jobTitle, companyName, jobDescription, cvPdfBase64 } = await req.json();
+    const { jobTitle, companyName, jobDescription, cvPdfBase64, profileInfo } = await req.json();
     
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     if (!ANTHROPIC_API_KEY) {
@@ -45,22 +45,37 @@ RÈGLES CRITIQUES :
       });
     }
 
+    // Construire l'en-tête avec les informations du profil
+    let headerText = '';
+    if (profileInfo) {
+      const { firstName, lastName, phoneNumber, professionalEmail, linkedinUrl } = profileInfo;
+      headerText = `${firstName} ${lastName}\n`;
+      if (phoneNumber) headerText += `${phoneNumber}\n`;
+      if (professionalEmail) headerText += `${professionalEmail}\n`;
+      if (linkedinUrl) headerText += `${linkedinUrl}\n`;
+      headerText += '\n\n';
+    }
+
     const textPrompt = `Analyse le CV fourni et rédige une lettre de motivation professionnelle pour le poste suivant :
 
 Poste : ${jobTitle}
 Entreprise : ${companyName}
 ${jobDescription ? `Description du poste : ${jobDescription}` : ''}
 
+IMPORTANT : Commence la lettre par cet en-tête exactement (ne modifie rien) :
+${headerText}
+
 Instructions :
-1. Lis attentivement le CV pour identifier les compétences, expériences et formations pertinentes
-2. Fais des liens précis entre les éléments du CV et les exigences du poste
-3. Structure la lettre avec :
+1. Commence par l'en-tête fourni ci-dessus sans le modifier
+2. Lis attentivement le CV pour identifier les compétences, expériences et formations pertinentes
+3. Fais des liens précis entre les éléments du CV et les exigences du poste
+4. Structure le corps de la lettre avec :
    - Une introduction mentionnant le poste et l'entreprise
    - Un corps qui met en valeur les expériences et compétences RÉELLES du candidat en lien avec le poste
    - Une conclusion professionnelle
-4. Utilise UNIQUEMENT les informations du CV - n'invente rien
-5. Sois concis et percutant (environ 300-400 mots)
-6. Utilise un ton professionnel et formel`;
+5. Utilise UNIQUEMENT les informations du CV - n'invente rien
+6. Sois concis et percutant (environ 300-400 mots pour le corps)
+7. Utilise un ton professionnel et formel`;
 
     content.push({
       type: 'text',
