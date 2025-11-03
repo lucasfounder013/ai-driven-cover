@@ -48,12 +48,16 @@ RÈGLES CRITIQUES :
     // Construire l'en-tête avec les informations du profil
     let headerText = '';
     if (profileInfo) {
-      const { firstName, lastName, phoneNumber, professionalEmail, linkedinUrl } = profileInfo;
+      const { firstName, lastName, phoneNumber, professionalEmail, linkedinUrl, desiredPosition, availableFrom } = profileInfo;
       headerText = `${firstName} ${lastName}\n`;
-      if (phoneNumber) headerText += `${phoneNumber}\n`;
       if (professionalEmail) headerText += `${professionalEmail}\n`;
+      if (phoneNumber) headerText += `${phoneNumber}\n`;
       if (linkedinUrl) headerText += `${linkedinUrl}\n`;
-      headerText += '\n\n';
+      if (desiredPosition) headerText += `Poste recherché : ${desiredPosition}\n`;
+      if (availableFrom) headerText += `Disponibilité : ${availableFrom}\n`;
+      headerText += '\n';
+      headerText += `Objet : Candidature pour le poste de ${jobTitle}\n`;
+      headerText += '\n';
     }
 
     const textPrompt = `Analyse le CV fourni et rédige une lettre de motivation professionnelle pour le poste suivant :
