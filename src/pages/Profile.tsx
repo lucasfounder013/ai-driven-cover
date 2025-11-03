@@ -388,17 +388,20 @@ const Profile = () => {
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-4">
               <Label>
                 Durée souhaitée du poste <span className="text-destructive">*</span>
               </Label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <Label htmlFor="durationMin" className="text-sm text-muted-foreground">
+                    Durée minimum
+                  </Label>
                   <Select value={durationMin} onValueChange={setDurationMin} disabled={isLoading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Durée minimum" />
+                    <SelectTrigger id="durationMin">
+                      <SelectValue placeholder="Sélectionnez" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background z-50">
                       <SelectItem value="1">1 mois</SelectItem>
                       <SelectItem value="2">2 mois</SelectItem>
                       <SelectItem value="3">3 mois</SelectItem>
@@ -423,11 +426,14 @@ const Profile = () => {
                   )}
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="durationMax" className="text-sm text-muted-foreground">
+                    Durée maximum
+                  </Label>
                   <Select value={durationMax} onValueChange={setDurationMax} disabled={isLoading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Durée maximum" />
+                    <SelectTrigger id="durationMax">
+                      <SelectValue placeholder="Sélectionnez" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background z-50">
                       <SelectItem value="1">1 mois</SelectItem>
                       <SelectItem value="2">2 mois</SelectItem>
                       <SelectItem value="3">3 mois</SelectItem>
