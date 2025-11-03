@@ -12,32 +12,60 @@ serve(async (req) => {
   }
 
   try {
-    const { jobTitle, companyName, jobDescription, cvText } = await req.json();
+    const { jobTitle, companyName, jobDescription, cvPdfBase64 } = await req.json();
     
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     if (!ANTHROPIC_API_KEY) {
       throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
+    console.log('Analyzing CV and generating cover letter with Claude...');
+
     const systemPrompt = `Tu es un expert en rédaction de lettres de motivation professionnelles en français. 
 Tu dois créer des lettres personnalisées, convaincantes et bien structurées qui mettent en valeur les compétences du candidat.
-La lettre doit être formelle, professionnelle et adaptée au poste et à l'entreprise.`;
 
-    const userPrompt = `Rédige une lettre de motivation professionnelle pour le poste suivant :
+RÈGLES CRITIQUES :
+- Utilise UNIQUEMENT les informations présentes dans le CV fourni
+- N'invente AUCUNE compétence, expérience ou formation qui n'est pas explicitement mentionnée dans le CV
+- Si une information manque dans le CV, ne la mentionne pas dans la lettre
+- Sois factuel et précis, en citant des éléments concrets du CV
+- La lettre doit être formelle, professionnelle et adaptée au poste et à l'entreprise`;
+
+    // Préparer le contenu avec le PDF du CV
+    const content = [];
+    
+    if (cvPdfBase64) {
+      content.push({
+        type: 'document',
+        source: {
+          type: 'base64',
+          media_type: 'application/pdf',
+          data: cvPdfBase64
+        }
+      });
+    }
+
+    const textPrompt = `Analyse le CV fourni et rédige une lettre de motivation professionnelle pour le poste suivant :
 
 Poste : ${jobTitle}
 Entreprise : ${companyName}
 ${jobDescription ? `Description du poste : ${jobDescription}` : ''}
 
-${cvText ? `Informations du CV du candidat :
-${cvText}` : ''}
+Instructions :
+1. Lis attentivement le CV pour identifier les compétences, expériences et formations pertinentes
+2. Fais des liens précis entre les éléments du CV et les exigences du poste
+3. Structure la lettre avec :
+   - Une introduction mentionnant le poste et l'entreprise
+   - Un corps qui met en valeur les expériences et compétences RÉELLES du candidat en lien avec le poste
+   - Une conclusion professionnelle
+4. Utilise UNIQUEMENT les informations du CV - n'invente rien
+5. Sois concis et percutant (environ 300-400 mots)
+6. Utilise un ton professionnel et formel`;
 
-La lettre doit :
-- Être structurée avec une introduction, un corps de texte et une conclusion
-- Mettre en valeur les compétences pertinentes du candidat
-- Montrer l'intérêt du candidat pour l'entreprise et le poste
-- Être concise et percutante (environ 300-400 mots)
-- Utiliser un ton professionnel et formel`;
+    content.push({
+      type: 'text',
+      text: textPrompt
+    });
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -51,7 +79,7 @@ La lettre doit :
         max_tokens: 2048,
         system: systemPrompt,
         messages: [
-          { role: 'user', content: userPrompt }
+          { role: 'user', content }
         ],
       }),
     });

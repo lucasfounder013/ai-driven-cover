@@ -36,22 +36,27 @@ export const GenerationStep = ({
 
     setGenerating(true);
     try {
-      // Télécharger et lire le CV
+      // Télécharger le PDF du CV
       const { data: cvData, error: downloadError } = await supabase.storage
         .from("cvs")
         .download(cvPath);
 
       if (downloadError) throw downloadError;
 
-      const cvText = await cvData.text();
+      // Convertir le PDF en base64
+      const arrayBuffer = await cvData.arrayBuffer();
+      const base64 = btoa(
+        new Uint8Array(arrayBuffer)
+          .reduce((data, byte) => data + String.fromCharCode(byte), '')
+      );
 
-      // Appeler l'edge function
+      // Appeler l'edge function avec le PDF en base64
       const { data, error } = await supabase.functions.invoke("generate-cover-letter", {
         body: {
           jobTitle,
           companyName,
           jobDescription,
-          cvText,
+          cvPdfBase64: base64,
         },
       });
 
@@ -61,7 +66,7 @@ export const GenerationStep = ({
       
       toast({
         title: "Lettre générée",
-        description: "Votre lettre de motivation a été créée avec succès",
+        description: "Votre lettre de motivation a été créée avec succès grâce à l'analyse de Claude",
       });
     } catch (error: any) {
       console.error("Error generating letter:", error);
