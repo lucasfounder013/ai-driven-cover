@@ -24,10 +24,13 @@ const Profile = () => {
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [desiredPosition, setDesiredPosition] = useState('');
+  const [customDesiredPosition, setCustomDesiredPosition] = useState('');
   const [availableMonth, setAvailableMonth] = useState('');
   const [availableYear, setAvailableYear] = useState('');
   const [durationMin, setDurationMin] = useState('');
+  const [customDurationMin, setCustomDurationMin] = useState('');
   const [durationMax, setDurationMax] = useState('');
+  const [customDurationMax, setCustomDurationMax] = useState('');
   const hasCheckedAuth = useRef(false);
 
   useEffect(() => {
@@ -63,9 +66,29 @@ const Profile = () => {
       setPhoneNumber(data.phone_number || '');
       setLinkedinUrl(data.linkedin_url || '');
       setAvatarUrl(data.avatar_url || '');
-      setDesiredPosition(data.desired_position || '');
-      setDurationMin(data.duration_min?.toString() || '');
-      setDurationMax(data.duration_max?.toString() || '');
+      const positionValue = data.desired_position || '';
+      if (['stage', 'alternance', 'premier_emploi', 'cdd', 'cdi', 'freelance', 'interim'].includes(positionValue)) {
+        setDesiredPosition(positionValue);
+      } else if (positionValue) {
+        setDesiredPosition('autre');
+        setCustomDesiredPosition(positionValue);
+      }
+      
+      const minDuration = data.duration_min?.toString() || '';
+      if (['1', '2', '3', '6', '12', '18', '24', '36'].includes(minDuration)) {
+        setDurationMin(minDuration);
+      } else if (minDuration) {
+        setDurationMin('autre');
+        setCustomDurationMin(minDuration);
+      }
+      
+      const maxDuration = data.duration_max?.toString() || '';
+      if (['1', '2', '3', '6', '12', '18', '24', '36', 'unlimited'].includes(maxDuration)) {
+        setDurationMax(maxDuration);
+      } else if (maxDuration) {
+        setDurationMax('autre');
+        setCustomDurationMax(maxDuration);
+      }
       
       // Parse available_from date (format: YYYY-MM-DD)
       if (data.available_from) {
@@ -138,6 +161,10 @@ const Profile = () => {
         formattedDate = `${availableYear}-${availableMonth}-01`;
       }
 
+      const finalDesiredPosition = desiredPosition === 'autre' ? customDesiredPosition : desiredPosition;
+      const finalDurationMin = durationMin === 'autre' ? parseInt(customDurationMin) : (durationMin ? parseInt(durationMin) : null);
+      const finalDurationMax = durationMax === 'autre' ? parseInt(customDurationMax) : (durationMax === 'unlimited' ? null : (durationMax ? parseInt(durationMax) : null));
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -147,9 +174,9 @@ const Profile = () => {
           phone_number: phoneNumber,
           linkedin_url: linkedinUrl,
           avatar_url: avatarUrl,
-          desired_position: desiredPosition || null,
-          duration_min: durationMin ? parseInt(durationMin) : null,
-          duration_max: durationMax ? parseInt(durationMax) : null,
+          desired_position: finalDesiredPosition || null,
+          duration_min: finalDurationMin,
+          duration_max: finalDurationMax,
           available_from: formattedDate,
           profile_completed: true,
         })
@@ -316,8 +343,18 @@ const Profile = () => {
                   <SelectItem value="cdi">CDI</SelectItem>
                   <SelectItem value="freelance">Freelance/Mission</SelectItem>
                   <SelectItem value="interim">Intérim</SelectItem>
+                  <SelectItem value="autre">Autre</SelectItem>
                 </SelectContent>
               </Select>
+              {desiredPosition === 'autre' && (
+                <Input
+                  type="text"
+                  placeholder="Précisez le type de poste"
+                  value={customDesiredPosition}
+                  onChange={(e) => setCustomDesiredPosition(e.target.value)}
+                  disabled={isLoading}
+                />
+              )}
             </div>
 
             <div className="space-y-2">
@@ -337,8 +374,19 @@ const Profile = () => {
                       <SelectItem value="18">18 mois</SelectItem>
                       <SelectItem value="24">24 mois</SelectItem>
                       <SelectItem value="36">36 mois</SelectItem>
+                      <SelectItem value="autre">Autre</SelectItem>
                     </SelectContent>
                   </Select>
+                  {durationMin === 'autre' && (
+                    <Input
+                      type="number"
+                      placeholder="Nombre de mois"
+                      value={customDurationMin}
+                      onChange={(e) => setCustomDurationMin(e.target.value)}
+                      disabled={isLoading}
+                      min="1"
+                    />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Select value={durationMax} onValueChange={setDurationMax} disabled={isLoading}>
@@ -355,8 +403,19 @@ const Profile = () => {
                       <SelectItem value="24">24 mois</SelectItem>
                       <SelectItem value="36">36 mois</SelectItem>
                       <SelectItem value="unlimited">Indéterminée</SelectItem>
+                      <SelectItem value="autre">Autre</SelectItem>
                     </SelectContent>
                   </Select>
+                  {durationMax === 'autre' && (
+                    <Input
+                      type="number"
+                      placeholder="Nombre de mois"
+                      value={customDurationMax}
+                      onChange={(e) => setCustomDurationMax(e.target.value)}
+                      disabled={isLoading}
+                      min="1"
+                    />
+                  )}
                 </div>
               </div>
             </div>
