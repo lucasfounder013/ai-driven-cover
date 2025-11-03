@@ -26,6 +26,8 @@ const Profile = () => {
   const [desiredPosition, setDesiredPosition] = useState('');
   const [availableMonth, setAvailableMonth] = useState('');
   const [availableYear, setAvailableYear] = useState('');
+  const [durationMin, setDurationMin] = useState('');
+  const [durationMax, setDurationMax] = useState('');
   const hasCheckedAuth = useRef(false);
 
   useEffect(() => {
@@ -62,6 +64,8 @@ const Profile = () => {
       setLinkedinUrl(data.linkedin_url || '');
       setAvatarUrl(data.avatar_url || '');
       setDesiredPosition(data.desired_position || '');
+      setDurationMin(data.duration_min?.toString() || '');
+      setDurationMax(data.duration_max?.toString() || '');
       
       // Parse available_from date (format: YYYY-MM-DD)
       if (data.available_from) {
@@ -144,6 +148,8 @@ const Profile = () => {
           linkedin_url: linkedinUrl,
           avatar_url: avatarUrl,
           desired_position: desiredPosition || null,
+          duration_min: durationMin ? parseInt(durationMin) : null,
+          duration_max: durationMax ? parseInt(durationMax) : null,
           available_from: formattedDate,
           profile_completed: true,
         })
@@ -298,14 +304,61 @@ const Profile = () => {
 
             <div className="space-y-2">
               <Label htmlFor="desiredPosition">Type de poste recherché (optionnel)</Label>
-              <Input
-                id="desiredPosition"
-                type="text"
-                placeholder="Ex: Développeur Full-Stack, Chef de projet..."
-                value={desiredPosition}
-                onChange={(e) => setDesiredPosition(e.target.value)}
-                disabled={isLoading}
-              />
+              <Select value={desiredPosition} onValueChange={setDesiredPosition} disabled={isLoading}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionnez un type de poste" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="stage">Stage</SelectItem>
+                  <SelectItem value="alternance">Alternance</SelectItem>
+                  <SelectItem value="premier_emploi">Premier emploi (CDI)</SelectItem>
+                  <SelectItem value="cdd">CDD</SelectItem>
+                  <SelectItem value="cdi">CDI</SelectItem>
+                  <SelectItem value="freelance">Freelance/Mission</SelectItem>
+                  <SelectItem value="interim">Intérim</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Durée souhaitée du poste (optionnel)</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Select value={durationMin} onValueChange={setDurationMin} disabled={isLoading}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Durée minimum" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 mois</SelectItem>
+                      <SelectItem value="2">2 mois</SelectItem>
+                      <SelectItem value="3">3 mois</SelectItem>
+                      <SelectItem value="6">6 mois</SelectItem>
+                      <SelectItem value="12">12 mois</SelectItem>
+                      <SelectItem value="18">18 mois</SelectItem>
+                      <SelectItem value="24">24 mois</SelectItem>
+                      <SelectItem value="36">36 mois</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Select value={durationMax} onValueChange={setDurationMax} disabled={isLoading}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Durée maximum" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 mois</SelectItem>
+                      <SelectItem value="2">2 mois</SelectItem>
+                      <SelectItem value="3">3 mois</SelectItem>
+                      <SelectItem value="6">6 mois</SelectItem>
+                      <SelectItem value="12">12 mois</SelectItem>
+                      <SelectItem value="18">18 mois</SelectItem>
+                      <SelectItem value="24">24 mois</SelectItem>
+                      <SelectItem value="36">36 mois</SelectItem>
+                      <SelectItem value="unlimited">Indéterminée</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">
