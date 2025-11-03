@@ -159,21 +159,21 @@ export const GenerationStep = ({
       // Configuration de la police et des marges
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      const leftMargin = 2;
-      const rightMargin = 2;
+      const leftMargin = 8;
+      const rightMargin = 8;
       const maxWidth = pageWidth - leftMargin - rightMargin;
       
       // Diviser le texte en lignes pour qu'il tienne dans la page
       const lines = doc.splitTextToSize(generatedLetter, maxWidth);
       
       // Ajouter le texte page par page avec justification
-      let y = 2;
+      let y = 8;
       doc.setFontSize(11);
       
       lines.forEach((line: string, index: number) => {
-        if (y > pageHeight - 2) {
+        if (y > pageHeight - 8) {
           doc.addPage();
-          y = 2;
+          y = 8;
         }
         doc.text(line, leftMargin, y, { maxWidth, align: 'justify' });
         y += 7;
