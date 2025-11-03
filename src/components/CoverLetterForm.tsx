@@ -10,7 +10,6 @@ export const CoverLetterForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvPath, setCvPath] = useState<string>("");
-  const [cvText, setCvText] = useState<string>("");
   const [jobTitle, setJobTitle] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [jobDescription, setJobDescription] = useState("");
@@ -37,7 +36,6 @@ export const CoverLetterForm = () => {
     setCurrentStep(1);
     setCvFile(null);
     setCvPath("");
-    setCvText("");
     setJobTitle("");
     setCompanyName("");
     setJobDescription("");
@@ -84,7 +82,6 @@ export const CoverLetterForm = () => {
             cvFile={cvFile} 
             setCvFile={setCvFile}
             setCvPath={setCvPath}
-            setCvText={setCvText}
           />
         )}
         {currentStep === 2 && (
@@ -99,7 +96,7 @@ export const CoverLetterForm = () => {
         )}
         {currentStep === 3 && (
           <GenerationStep
-            cvText={cvText}
+            cvPath={cvPath}
             jobTitle={jobTitle}
             companyName={companyName}
             jobDescription={jobDescription}
