@@ -143,10 +143,38 @@ const Profile = () => {
     e.preventDefault();
     if (!user) return;
 
-    if (!firstName.trim() || !lastName.trim() || !professionalEmail.trim() || !phoneNumber.trim()) {
+    if (!firstName.trim() || !lastName.trim() || !professionalEmail.trim() || !phoneNumber.trim() || 
+        !desiredPosition || !durationMin || !durationMax || !availableMonth || !availableYear) {
       toast({
         title: 'Champs requis',
         description: 'Veuillez remplir tous les champs obligatoires.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (desiredPosition === 'autre' && !customDesiredPosition.trim()) {
+      toast({
+        title: 'Champs requis',
+        description: 'Veuillez préciser le type de poste.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (durationMin === 'autre' && !customDurationMin.trim()) {
+      toast({
+        title: 'Champs requis',
+        description: 'Veuillez préciser la durée minimum.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (durationMax === 'autre' && !customDurationMax.trim()) {
+      toast({
+        title: 'Champs requis',
+        description: 'Veuillez préciser la durée maximum.',
         variant: 'destructive',
       });
       return;
@@ -330,7 +358,9 @@ const Profile = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="desiredPosition">Type de poste recherché (optionnel)</Label>
+              <Label htmlFor="desiredPosition">
+                Type de poste recherché <span className="text-destructive">*</span>
+              </Label>
               <Select value={desiredPosition} onValueChange={setDesiredPosition} disabled={isLoading}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionnez un type de poste" />
@@ -353,12 +383,15 @@ const Profile = () => {
                   value={customDesiredPosition}
                   onChange={(e) => setCustomDesiredPosition(e.target.value)}
                   disabled={isLoading}
+                  required
                 />
               )}
             </div>
 
             <div className="space-y-2">
-              <Label>Durée souhaitée du poste (optionnel)</Label>
+              <Label>
+                Durée souhaitée du poste <span className="text-destructive">*</span>
+              </Label>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Select value={durationMin} onValueChange={setDurationMin} disabled={isLoading}>
@@ -385,6 +418,7 @@ const Profile = () => {
                       onChange={(e) => setCustomDurationMin(e.target.value)}
                       disabled={isLoading}
                       min="1"
+                      required
                     />
                   )}
                 </div>
@@ -414,6 +448,7 @@ const Profile = () => {
                       onChange={(e) => setCustomDurationMax(e.target.value)}
                       disabled={isLoading}
                       min="1"
+                      required
                     />
                   )}
                 </div>
@@ -421,7 +456,9 @@ const Profile = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Disponible à partir de (optionnel)</Label>
+              <Label>
+                Disponible à partir de <span className="text-destructive">*</span>
+              </Label>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Select value={availableMonth} onValueChange={setAvailableMonth} disabled={isLoading}>
