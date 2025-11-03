@@ -159,7 +159,7 @@ export const GenerationStep = ({
       // Configuration de la police et des marges
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 20;
+      const margin = 12;
       const maxWidth = pageWidth - (margin * 2);
       
       // Diviser le texte en lignes pour qu'il tienne dans la page
