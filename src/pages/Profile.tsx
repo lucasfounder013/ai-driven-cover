@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, Loader2 } from 'lucide-react';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -21,14 +21,19 @@ const Profile = () => {
   const [professionalEmail, setProfessionalEmail] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const hasCheckedAuth = useRef(false);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
+    if (!loading && !user && !hasCheckedAuth.current) {
+      hasCheckedAuth.current = true;
+      navigate('/auth', { replace: true });
       return;
     }
-    loadProfile();
-  }, [user, navigate]);
+    if (user && !hasCheckedAuth.current) {
+      hasCheckedAuth.current = true;
+      loadProfile();
+    }
+  }, [user, loading, navigate]);
 
   const loadProfile = async () => {
     if (!user) return;
@@ -128,7 +133,7 @@ const Profile = () => {
         description: 'Vos informations ont été enregistrées avec succès.',
       });
 
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({

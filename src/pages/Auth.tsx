@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,12 +13,15 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { user, signIn, signUp } = useAuth();
+  const { user, loading, signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
     const checkProfileCompletion = async () => {
-      if (user) {
+      if (user && !loading && !hasRedirected.current) {
+        hasRedirected.current = true;
+        
         const { data } = await supabase
           .from('profiles')
           .select('profile_completed')
@@ -26,15 +29,15 @@ const Auth = () => {
           .single();
         
         if (data && !data.profile_completed) {
-          navigate('/profile');
+          navigate('/profile', { replace: true });
         } else {
-          navigate('/dashboard');
+          navigate('/dashboard', { replace: true });
         }
       }
     };
     
     checkProfileCompletion();
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
