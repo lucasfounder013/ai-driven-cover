@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Download, RotateCcw, Sparkles } from "lucide-react";
+import { Loader2, Download, Sparkles, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -129,14 +129,63 @@ export const GenerationStep = ({
     }
   };
 
-  const downloadLetter = () => {
-    const element = document.createElement("a");
-    const file = new Blob([generatedLetter], { type: "text/plain" });
-    element.href = URL.createObjectURL(file);
-    element.download = `lettre_motivation_${companyName}_${Date.now()}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+  const downloadLetter = async () => {
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      
+      // Configuration de la police et des marges
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 20;
+      const maxWidth = pageWidth - (margin * 2);
+      
+      // Diviser le texte en lignes pour qu'il tienne dans la page
+      const lines = doc.splitTextToSize(generatedLetter, maxWidth);
+      
+      // Ajouter le texte page par page
+      let y = margin;
+      doc.setFontSize(11);
+      
+      lines.forEach((line: string, index: number) => {
+        if (y > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
+        doc.text(line, margin, y);
+        y += 7;
+      });
+      
+      doc.save(`lettre_motivation_${companyName}_${Date.now()}.pdf`);
+      
+      toast({
+        title: "Téléchargement réussi",
+        description: "Votre lettre a été téléchargée en PDF",
+      });
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de télécharger la lettre",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const copyLetter = () => {
+    navigator.clipboard.writeText(generatedLetter).then(() => {
+      toast({
+        title: "Lettre copiée",
+        description: "La lettre a été copiée dans le presse-papier",
+      });
+    }).catch((error) => {
+      console.error("Error copying letter:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de copier la lettre",
+        variant: "destructive",
+      });
+    });
   };
 
   if (generating) {
@@ -191,9 +240,9 @@ export const GenerationStep = ({
       />
 
       <div className="flex flex-wrap gap-3 justify-center">
-        <Button onClick={generateLetter} variant="outline">
-          <Sparkles className="w-4 h-4 mr-2" />
-          Régénérer
+        <Button onClick={copyLetter} variant="outline">
+          <Copy className="w-4 h-4 mr-2" />
+          Copier
         </Button>
         <Button onClick={downloadLetter} variant="outline">
           <Download className="w-4 h-4 mr-2" />
@@ -208,10 +257,6 @@ export const GenerationStep = ({
           ) : (
             "Sauvegarder"
           )}
-        </Button>
-        <Button onClick={onReset} variant="outline">
-          <RotateCcw className="w-4 h-4 mr-2" />
-          Nouvelle lettre
         </Button>
       </div>
     </div>
