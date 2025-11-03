@@ -47,32 +47,35 @@ export const CoverLetterForm = () => {
   return (
     <Card className="p-8">
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center mb-4">
           {[1, 2, 3].map((step) => (
             <div key={step} className="flex items-center flex-1">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                  currentStep >= step
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {step}
+              <div className="flex flex-col items-center flex-1">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold mb-2 ${
+                    currentStep >= step
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {step}
+                </div>
+                <span className="text-sm text-muted-foreground text-center">
+                  {step === 1 && "Télécharger le CV"}
+                  {step === 2 && "Détails du poste"}
+                  {step === 3 && "Génération"}
+                </span>
               </div>
               {step < 3 && (
                 <div
-                  className={`flex-1 h-1 mx-2 ${
+                  className={`h-1 w-full ${
                     currentStep > step ? "bg-primary" : "bg-muted"
                   }`}
+                  style={{ marginTop: "-20px" }}
                 />
               )}
             </div>
           ))}
-        </div>
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Télécharger le CV</span>
-          <span>Détails du poste</span>
-          <span>Génération</span>
         </div>
       </div>
 
