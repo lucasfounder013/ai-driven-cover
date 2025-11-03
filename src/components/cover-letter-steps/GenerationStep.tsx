@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Download, Sparkles, Copy } from "lucide-react";
+import { Loader2, Download, Sparkles, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,6 +27,7 @@ export const GenerationStep = ({
 }: GenerationStepProps) => {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -174,10 +175,12 @@ export const GenerationStep = ({
 
   const copyLetter = () => {
     navigator.clipboard.writeText(generatedLetter).then(() => {
+      setCopied(true);
       toast({
         title: "Lettre copiée",
         description: "La lettre a été copiée dans le presse-papier",
       });
+      setTimeout(() => setCopied(false), 2000);
     }).catch((error) => {
       console.error("Error copying letter:", error);
       toast({
@@ -241,8 +244,17 @@ export const GenerationStep = ({
 
       <div className="flex flex-wrap gap-3 justify-center">
         <Button onClick={copyLetter} variant="outline">
-          <Copy className="w-4 h-4 mr-2" />
-          Copier
+          {copied ? (
+            <>
+              <Check className="w-4 h-4 mr-2" />
+              Copié
+            </>
+          ) : (
+            <>
+              <Copy className="w-4 h-4 mr-2" />
+              Copier
+            </>
+          )}
         </Button>
         <Button onClick={downloadLetter} variant="outline">
           <Download className="w-4 h-4 mr-2" />
