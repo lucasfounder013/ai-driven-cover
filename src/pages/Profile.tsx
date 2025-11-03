@@ -6,23 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const Profile = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [professionalEmail, setProfessionalEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
   const [desiredPosition, setDesiredPosition] = useState('');
   const [customDesiredPosition, setCustomDesiredPosition] = useState('');
   const [availableMonth, setAvailableMonth] = useState('');
@@ -65,7 +62,6 @@ const Profile = () => {
       setProfessionalEmail(data.professional_email || '');
       setPhoneNumber(data.phone_number || '');
       setLinkedinUrl(data.linkedin_url || '');
-      setAvatarUrl(data.avatar_url || '');
       const positionValue = data.desired_position || '';
       if (['stage', 'alternance', 'premier_emploi', 'cdd', 'cdi', 'freelance', 'interim'].includes(positionValue)) {
         setDesiredPosition(positionValue);
@@ -96,46 +92,6 @@ const Profile = () => {
         setAvailableYear(year);
         setAvailableMonth(month);
       }
-    }
-  };
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !user) {
-      return;
-    }
-
-    const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}/${Math.random()}.${fileExt}`;
-
-    setIsUploading(true);
-
-    try {
-      const { error: uploadError, data } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      setAvatarUrl(publicUrl);
-
-      toast({
-        title: 'Photo téléchargée',
-        description: 'Votre photo de profil a été mise à jour.',
-      });
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de télécharger la photo.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -201,7 +157,6 @@ const Profile = () => {
           professional_email: professionalEmail,
           phone_number: phoneNumber,
           linkedin_url: linkedinUrl,
-          avatar_url: avatarUrl,
           desired_position: finalDesiredPosition || null,
           duration_min: finalDurationMin,
           duration_max: finalDurationMax,
@@ -230,13 +185,6 @@ const Profile = () => {
     }
   };
 
-  const getInitials = () => {
-    if (firstName && lastName) {
-      return `${firstName[0]}${lastName[0]}`.toUpperCase();
-    }
-    return user?.email?.[0].toUpperCase() || '?';
-  };
-
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl">
@@ -248,41 +196,6 @@ const Profile = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex flex-col items-center gap-4">
-              <Avatar className="w-24 h-24">
-                <AvatarImage src={avatarUrl} alt="Photo de profil" />
-                <AvatarFallback className="text-2xl">
-                  {getInitials()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="relative">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  disabled={isUploading}
-                  className="hidden"
-                  id="avatar-upload"
-                />
-                <Label
-                  htmlFor="avatar-upload"
-                  className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Téléchargement...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4" />
-                      Ajouter une photo
-                    </>
-                  )}
-                </Label>
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">
