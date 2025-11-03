@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 interface GenerationStepProps {
-  cvPath: string;
+  cvText: string;
   jobTitle: string;
   companyName: string;
   jobDescription: string;
@@ -17,7 +17,7 @@ interface GenerationStepProps {
 }
 
 export const GenerationStep = ({
-  cvPath,
+  cvText,
   jobTitle,
   companyName,
   jobDescription,
@@ -36,16 +36,7 @@ export const GenerationStep = ({
 
     setGenerating(true);
     try {
-      // Télécharger et lire le CV
-      const { data: cvData, error: downloadError } = await supabase.storage
-        .from("cvs")
-        .download(cvPath);
-
-      if (downloadError) throw downloadError;
-
-      const cvText = await cvData.text();
-
-      // Appeler l'edge function
+      // Appeler l'edge function avec le texte du CV déjà extrait
       const { data, error } = await supabase.functions.invoke("generate-cover-letter", {
         body: {
           jobTitle,
@@ -99,7 +90,7 @@ export const GenerationStep = ({
         job_title: jobTitle,
         company_name: companyName,
         job_description: jobDescription,
-        cv_text: cvPath,
+        cv_text: cvText,
         generated_letter: generatedLetter,
         status: "final",
       });

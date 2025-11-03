@@ -4,17 +4,42 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import * as pdfjsLib from "pdfjs-dist";
+
+// Configure le worker PDF.js
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface CVUploadStepProps {
   cvFile: File | null;
   setCvFile: (file: File | null) => void;
   setCvPath: (path: string) => void;
+  setCvText: (text: string) => void;
 }
 
-export const CVUploadStep = ({ cvFile, setCvFile, setCvPath }: CVUploadStepProps) => {
+export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUploadStepProps) => {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  const extractTextFromPDF = async (file: File): Promise<string> => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = "";
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item: any) => item.str).join(" ");
+        fullText += pageText + "\n";
+      }
+
+      return fullText;
+    } catch (error) {
+      console.error("Error extracting text from PDF:", error);
+      throw new Error("Impossible d'extraire le texte du PDF");
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -51,6 +76,16 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath }: CVUploadStepProps
       const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
+      // Extraire le texte du PDF
+      let extractedText = "";
+      if (file.type === "application/pdf") {
+        extractedText = await extractTextFromPDF(file);
+      } else {
+        // Pour les fichiers Word, on lit directement comme texte (limité)
+        extractedText = await file.text();
+      }
+
+      // Upload le fichier
       const { error } = await supabase.storage
         .from("cvs")
         .upload(fileName, file);
@@ -59,10 +94,11 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath }: CVUploadStepProps
 
       setCvFile(file);
       setCvPath(fileName);
+      setCvText(extractedText);
       
       toast({
-        title: "CV téléchargé",
-        description: "Votre CV a été uploadé avec succès",
+        title: "CV téléchargé et analysé",
+        description: "Votre CV a été uploadé et le texte extrait avec succès",
       });
     } catch (error: any) {
       console.error("Error uploading CV:", error);
@@ -145,6 +181,7 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath }: CVUploadStepProps
               onClick={() => {
                 setCvFile(null);
                 setCvPath("");
+                setCvText("");
               }}
             >
               Changer de CV
