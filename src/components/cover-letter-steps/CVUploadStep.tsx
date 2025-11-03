@@ -43,7 +43,12 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUplo
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    if (!file || !user) {
+      console.log("No file or no user");
+      return;
+    }
+
+    console.log("File selected:", file.name, file.type, file.size);
 
     // Vérifier le type de fichier
     const validTypes = [
@@ -73,32 +78,52 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUplo
 
     setUploading(true);
     try {
+      console.log("Starting file processing...");
       const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
       // Extraire le texte du PDF
       let extractedText = "";
       if (file.type === "application/pdf") {
-        extractedText = await extractTextFromPDF(file);
+        console.log("Extracting text from PDF...");
+        try {
+          extractedText = await extractTextFromPDF(file);
+          console.log("Text extracted, length:", extractedText.length);
+        } catch (pdfError) {
+          console.error("PDF extraction failed:", pdfError);
+          toast({
+            title: "Avertissement",
+            description: "Impossible d'extraire le texte du PDF, mais le fichier sera uploadé",
+            variant: "destructive",
+          });
+        }
       } else {
         // Pour les fichiers Word, on lit directement comme texte (limité)
+        console.log("Reading text from Word file...");
         extractedText = await file.text();
       }
 
       // Upload le fichier
+      console.log("Uploading file to storage...");
       const { error } = await supabase.storage
         .from("cvs")
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          upsert: true
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Storage upload error:", error);
+        throw error;
+      }
 
+      console.log("Upload successful");
       setCvFile(file);
       setCvPath(fileName);
       setCvText(extractedText);
       
       toast({
         title: "CV téléchargé et analysé",
-        description: "Votre CV a été uploadé et le texte extrait avec succès",
+        description: "Votre CV a été uploadé avec succès",
       });
     } catch (error: any) {
       console.error("Error uploading CV:", error);
@@ -109,6 +134,8 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUplo
       });
     } finally {
       setUploading(false);
+      // Reset l'input pour permettre de sélectionner le même fichier
+      e.target.value = "";
     }
   };
 
