@@ -22,6 +22,8 @@ const Profile = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [desiredPosition, setDesiredPosition] = useState('');
+  const [availableFrom, setAvailableFrom] = useState('');
   const hasCheckedAuth = useRef(false);
 
   useEffect(() => {
@@ -57,6 +59,8 @@ const Profile = () => {
       setPhoneNumber(data.phone_number || '');
       setLinkedinUrl(data.linkedin_url || '');
       setAvatarUrl(data.avatar_url || '');
+      setDesiredPosition(data.desired_position || '');
+      setAvailableFrom(data.available_from ? data.available_from.substring(0, 7) : '');
     }
   };
 
@@ -125,6 +129,8 @@ const Profile = () => {
           phone_number: phoneNumber,
           linkedin_url: linkedinUrl,
           avatar_url: avatarUrl,
+          desired_position: desiredPosition || null,
+          available_from: availableFrom ? `${availableFrom}-01` : null,
           profile_completed: true,
         })
         .eq('id', user.id);
@@ -272,6 +278,29 @@ const Profile = () => {
                 placeholder="https://linkedin.com/in/votre-profil"
                 value={linkedinUrl}
                 onChange={(e) => setLinkedinUrl(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="desiredPosition">Type de poste recherché (optionnel)</Label>
+              <Input
+                id="desiredPosition"
+                type="text"
+                placeholder="Ex: Développeur Full-Stack, Chef de projet..."
+                value={desiredPosition}
+                onChange={(e) => setDesiredPosition(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="availableFrom">Disponible à partir de (optionnel)</Label>
+              <Input
+                id="availableFrom"
+                type="month"
+                value={availableFrom}
+                onChange={(e) => setAvailableFrom(e.target.value)}
                 disabled={isLoading}
               />
             </div>

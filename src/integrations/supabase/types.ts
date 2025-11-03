@@ -63,8 +63,10 @@ export type Database = {
       }
       profiles: {
         Row: {
+          available_from: string | null
           avatar_url: string | null
           created_at: string
+          desired_position: string | null
           email: string | null
           first_name: string | null
           full_name: string | null
@@ -77,8 +79,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          available_from?: string | null
           avatar_url?: string | null
           created_at?: string
+          desired_position?: string | null
           email?: string | null
           first_name?: string | null
           full_name?: string | null
@@ -91,8 +95,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          available_from?: string | null
           avatar_url?: string | null
           created_at?: string
+          desired_position?: string | null
           email?: string | null
           first_name?: string | null
           full_name?: string | null
