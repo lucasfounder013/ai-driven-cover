@@ -130,28 +130,24 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath, setCvText }: CVUplo
               <Upload className="w-8 h-8 text-muted-foreground" />
             </div>
             <div>
-              <label htmlFor="cv-upload">
-                <Button
-                  variant="outline"
-                  disabled={uploading}
-                  className="cursor-pointer"
-                  asChild
-                >
-                  <span>
-                    {uploading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Téléchargement...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Choisir un fichier
-                      </>
-                    )}
-                  </span>
-                </Button>
-              </label>
+              <Button
+                variant="outline"
+                disabled={uploading}
+                className="cursor-pointer"
+                onClick={() => document.getElementById("cv-upload")?.click()}
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Téléchargement...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choisir un fichier
+                  </>
+                )}
+              </Button>
               <input
                 id="cv-upload"
                 type="file"
