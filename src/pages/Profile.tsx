@@ -120,6 +120,16 @@ const Profile = () => {
     setIsLoading(true);
 
     try {
+      // Format the date properly - ensure it's in YYYY-MM format
+      let formattedDate = null;
+      if (availableFrom) {
+        const dateValue = availableFrom.trim();
+        // If the value is already in YYYY-MM format, use it directly
+        if (/^\d{4}-\d{2}$/.test(dateValue)) {
+          formattedDate = `${dateValue}-01`;
+        }
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -130,7 +140,7 @@ const Profile = () => {
           linkedin_url: linkedinUrl,
           avatar_url: avatarUrl,
           desired_position: desiredPosition || null,
-          available_from: availableFrom ? `${availableFrom}-01` : null,
+          available_from: formattedDate,
           profile_completed: true,
         })
         .eq('id', user.id);
