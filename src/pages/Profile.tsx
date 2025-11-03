@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Loader2 } from 'lucide-react';
 
@@ -23,7 +24,8 @@ const Profile = () => {
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [desiredPosition, setDesiredPosition] = useState('');
-  const [availableFrom, setAvailableFrom] = useState('');
+  const [availableMonth, setAvailableMonth] = useState('');
+  const [availableYear, setAvailableYear] = useState('');
   const hasCheckedAuth = useRef(false);
 
   useEffect(() => {
@@ -60,7 +62,13 @@ const Profile = () => {
       setLinkedinUrl(data.linkedin_url || '');
       setAvatarUrl(data.avatar_url || '');
       setDesiredPosition(data.desired_position || '');
-      setAvailableFrom(data.available_from ? data.available_from.substring(0, 7) : '');
+      
+      // Parse available_from date (format: YYYY-MM-DD)
+      if (data.available_from) {
+        const [year, month] = data.available_from.split('-');
+        setAvailableYear(year);
+        setAvailableMonth(month);
+      }
     }
   };
 
@@ -120,14 +128,10 @@ const Profile = () => {
     setIsLoading(true);
 
     try {
-      // Format the date properly - ensure it's in YYYY-MM format
+      // Format the date properly - ensure it's in YYYY-MM-DD format
       let formattedDate = null;
-      if (availableFrom) {
-        const dateValue = availableFrom.trim();
-        // If the value is already in YYYY-MM format, use it directly
-        if (/^\d{4}-\d{2}$/.test(dateValue)) {
-          formattedDate = `${dateValue}-01`;
-        }
+      if (availableYear && availableMonth) {
+        formattedDate = `${availableYear}-${availableMonth}-01`;
       }
 
       const { error } = await supabase
@@ -305,14 +309,47 @@ const Profile = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="availableFrom">Disponible à partir de (optionnel)</Label>
-              <Input
-                id="availableFrom"
-                type="month"
-                value={availableFrom}
-                onChange={(e) => setAvailableFrom(e.target.value)}
-                disabled={isLoading}
-              />
+              <Label>Disponible à partir de (optionnel)</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Select value={availableMonth} onValueChange={setAvailableMonth} disabled={isLoading}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Mois" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="01">Janvier</SelectItem>
+                      <SelectItem value="02">Février</SelectItem>
+                      <SelectItem value="03">Mars</SelectItem>
+                      <SelectItem value="04">Avril</SelectItem>
+                      <SelectItem value="05">Mai</SelectItem>
+                      <SelectItem value="06">Juin</SelectItem>
+                      <SelectItem value="07">Juillet</SelectItem>
+                      <SelectItem value="08">Août</SelectItem>
+                      <SelectItem value="09">Septembre</SelectItem>
+                      <SelectItem value="10">Octobre</SelectItem>
+                      <SelectItem value="11">Novembre</SelectItem>
+                      <SelectItem value="12">Décembre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Select value={availableYear} onValueChange={setAvailableYear} disabled={isLoading}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Année" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() + i;
+                        return (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-4">
