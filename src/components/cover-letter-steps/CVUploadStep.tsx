@@ -59,6 +59,11 @@ export const CVUploadStep = ({ cvFile, setCvFile, setCvPath }: CVUploadStepProps
 
       setCvFile(file);
       setCvPath(fileName);
+      
+      toast({
+        title: "CV téléchargé",
+        description: "Votre CV a été uploadé avec succès",
+      });
     } catch (error: any) {
       console.error("Error uploading CV:", error);
       toast({
