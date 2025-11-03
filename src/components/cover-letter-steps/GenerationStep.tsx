@@ -31,7 +31,6 @@ export const GenerationStep = ({
   const { toast } = useToast();
   const { user } = useAuth();
 
-
   const generateLetter = async () => {
     if (!user) return;
 
@@ -151,39 +150,46 @@ export const GenerationStep = ({
     }
   };
 
+  // ✅ VERSION CORRIGÉE DU TÉLÉCHARGEMENT PDF
   const downloadLetter = async () => {
     try {
       const { jsPDF } = await import('jspdf');
-      const doc = new jsPDF();
-      
-      // Configuration de la police et des marges
+      const doc = new jsPDF({
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      // Marges professionnelles (~2 cm)
+      const leftMargin = 20;
+      const rightMargin = 20;
+      const topMargin = 25;
+      const bottomMargin = 25;
+
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      const leftMargin = 8;
-      const rightMargin = 8;
       const maxWidth = pageWidth - leftMargin - rightMargin;
-      
-      // Diviser le texte en lignes pour qu'il tienne dans la page
+
+      doc.setFont('Times', 'Roman');
+      doc.setFontSize(12);
+      doc.setTextColor(20, 20, 20);
+
       const lines = doc.splitTextToSize(generatedLetter, maxWidth);
-      
-      // Ajouter le texte page par page avec justification
-      let y = 8;
-      doc.setFontSize(11);
-      
-      lines.forEach((line: string, index: number) => {
-        if (y > pageHeight - 8) {
+      let y = topMargin;
+
+      lines.forEach((line: string) => {
+        if (y > pageHeight - bottomMargin) {
           doc.addPage();
-          y = 8;
+          y = topMargin;
         }
-        doc.text(line, leftMargin, y, { maxWidth, align: 'justify' });
-        y += 7;
+        doc.text(line, leftMargin, y, { maxWidth });
+        y += 6;
       });
-      
+
       doc.save(`lettre_motivation_${companyName}_${Date.now()}.pdf`);
-      
+
       toast({
         title: "Téléchargement réussi",
-        description: "Votre lettre a été téléchargée en PDF",
+        description: "Votre lettre a été téléchargée en PDF avec une mise en page correcte",
       });
     } catch (error) {
       console.error("Error downloading PDF:", error);
