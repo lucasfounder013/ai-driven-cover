@@ -33,35 +33,24 @@ export const GenerationStep = ({
 
   const generateLetter = async () => {
     if (!user) return;
-
     setGenerating(true);
     try {
-      // Récupérer les informations du profil
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData } = await supabase
         .from("profiles")
         .select("first_name, last_name, phone_number, professional_email, linkedin_url")
         .eq("id", user.id)
         .single();
 
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-      }
-
-      // Télécharger le PDF du CV
-      const { data: cvData, error: downloadError } = await supabase.storage
+      const { data: cvData } = await supabase.storage
         .from("cvs")
         .download(cvPath);
 
-      if (downloadError) throw downloadError;
-
-      // Convertir le PDF en base64
       const arrayBuffer = await cvData.arrayBuffer();
       const base64 = btoa(
         new Uint8Array(arrayBuffer)
           .reduce((data, byte) => data + String.fromCharCode(byte), '')
       );
 
-      // Préparer les informations du profil
       const profileInfo = profileData ? {
         firstName: profileData.first_name || '',
         lastName: profileData.last_name || '',
@@ -70,7 +59,6 @@ export const GenerationStep = ({
         linkedinUrl: profileData.linkedin_url || ''
       } : null;
 
-      // Appeler l'edge function avec le PDF en base64 et les infos du profil
       const { data, error } = await supabase.functions.invoke("generate-cover-letter", {
         body: {
           jobTitle,
@@ -82,12 +70,11 @@ export const GenerationStep = ({
       });
 
       if (error) throw error;
-
       setGeneratedLetter(data.generatedLetter);
-      
+
       toast({
         title: "Lettre générée",
-        description: "Votre lettre de motivation a été créée avec succès grâce à l'analyse de Claude",
+        description: "Votre lettre de motivation a été créée avec succès",
       });
     } catch (error: any) {
       console.error("Error generating letter:", error);
@@ -102,23 +89,11 @@ export const GenerationStep = ({
   };
 
   const saveLetter = async () => {
-    if (!user) {
-      toast({
-        title: "Erreur",
-        description: "Vous devez être connecté pour sauvegarder une lettre",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (!user) return;
     setSaving(true);
     try {
-      // Vérifier que la session est valide
       const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error("Session invalide. Veuillez vous reconnecter.");
-      }
+      if (!session) throw new Error("Session invalide");
 
       const { error } = await supabase.from("cover_letters").insert({
         user_id: session.user.id,
@@ -136,7 +111,6 @@ export const GenerationStep = ({
         title: "Lettre sauvegardée",
         description: "Votre lettre a été enregistrée avec succès",
       });
-
       onReset();
     } catch (error: any) {
       console.error("Error saving letter:", error);
@@ -150,31 +124,57 @@ export const GenerationStep = ({
     }
   };
 
-  // ✅ VERSION CORRIGÉE DU TÉLÉCHARGEMENT PDF
+  // 🧩 Nouveau : PDF avec en-tête structuré
   const downloadLetter = async () => {
     try {
-      const { jsPDF } = await import('jspdf');
-      const doc = new jsPDF({
-        unit: 'mm',
-        format: 'a4',
-      });
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
 
-      // Marges professionnelles (~2 cm)
+      // Marges
       const leftMargin = 20;
       const rightMargin = 20;
       const topMargin = 25;
       const bottomMargin = 25;
-
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const maxWidth = pageWidth - leftMargin - rightMargin;
 
-      doc.setFont('Times', 'Roman');
+      // --- EN-TÊTE ---
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("LUCAS LE DONNÉ", pageWidth / 2, topMargin, { align: "center" });
+
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(12);
+      doc.setTextColor(90, 90, 90);
+      doc.text("Stage de 6 mois à partir de Février 2026", pageWidth / 2, topMargin + 8, { align: "center" });
+
+      doc.setFontSize(10);
+      doc.text("+33620962185  •  lucasledonne@live.fr  •  https://www.linkedin.com/in/lucas-le-donné-71a8682a7/",
+        pageWidth / 2, topMargin + 14, { align: "center" });
+
+      // Ligne de séparation visuelle
+      doc.setDrawColor(0);
+      doc.line(leftMargin, topMargin + 18, pageWidth - leftMargin, topMargin + 18);
+
+      // Titre du poste
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(0, 0, 0);
+      const title = `Stage – ${jobTitle} (${companyName})`;
+      doc.text(title, pageWidth / 2, topMargin + 28, { align: "center" });
+
+      // Ligne sous le titre
+      doc.setLineWidth(0.3);
+      doc.line(leftMargin, topMargin + 30, pageWidth - leftMargin, topMargin + 30);
+
+      // --- TEXTE DE LA LETTRE ---
+      doc.setFont("Times", "Roman");
       doc.setFontSize(12);
       doc.setTextColor(20, 20, 20);
 
       const lines = doc.splitTextToSize(generatedLetter, maxWidth);
-      let y = topMargin;
+      let y = topMargin + 40;
 
       lines.forEach((line: string) => {
         if (y > pageHeight - bottomMargin) {
@@ -189,7 +189,7 @@ export const GenerationStep = ({
 
       toast({
         title: "Téléchargement réussi",
-        description: "Votre lettre a été téléchargée en PDF avec une mise en page correcte",
+        description: "Votre lettre a été téléchargée avec un en-tête professionnel",
       });
     } catch (error) {
       console.error("Error downloading PDF:", error);
@@ -202,21 +202,24 @@ export const GenerationStep = ({
   };
 
   const copyLetter = () => {
-    navigator.clipboard.writeText(generatedLetter).then(() => {
-      setCopied(true);
-      toast({
-        title: "Lettre copiée",
-        description: "La lettre a été copiée dans le presse-papier",
+    navigator.clipboard
+      .writeText(generatedLetter)
+      .then(() => {
+        setCopied(true);
+        toast({
+          title: "Lettre copiée",
+          description: "La lettre a été copiée dans le presse-papier",
+        });
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch((error) => {
+        console.error("Error copying letter:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de copier la lettre",
+          variant: "destructive",
+        });
       });
-      setTimeout(() => setCopied(false), 2000);
-    }).catch((error) => {
-      console.error("Error copying letter:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de copier la lettre",
-        variant: "destructive",
-      });
-    });
   };
 
   if (generating) {
@@ -227,7 +230,7 @@ export const GenerationStep = ({
           Génération en cours...
         </h3>
         <p className="text-muted-foreground">
-          Claude est en train de rédiger votre lettre de motivation
+          Rédaction de votre lettre en cours
         </p>
       </div>
     );
