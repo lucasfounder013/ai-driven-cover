@@ -28,40 +28,40 @@ export const GenerationStep = ({
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [profileData, setProfileData] = useState<any>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // 🔹 Récupère le profil utilisateur dès qu'on a un user
+  const fetchProfile = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("first_name, last_name, phone_number, professional_email, linkedin_url")
+      .eq("id", user.id)
+      .single();
+    if (error) console.error("Error fetching profile:", error);
+    else setProfileData(data);
+  };
+
+  // Appel de fetchProfile quand on génère la lettre
   const generateLetter = async () => {
     if (!user) return;
+
     setGenerating(true);
     try {
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("first_name, last_name, phone_number, professional_email, linkedin_url, desired_position, duration_min, duration_max, available_from")
-        .eq("id", user.id)
-        .single();
+      await fetchProfile();
 
-      const { data: cvData } = await supabase.storage
+      // Télécharger le CV
+      const { data: cvData, error: downloadError } = await supabase.storage
         .from("cvs")
         .download(cvPath);
+      if (downloadError) throw downloadError;
 
       const arrayBuffer = await cvData.arrayBuffer();
       const base64 = btoa(
-        new Uint8Array(arrayBuffer)
-          .reduce((data, byte) => data + String.fromCharCode(byte), '')
+        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), "")
       );
-
-      const profileInfo = profileData ? {
-        firstName: profileData.first_name || '',
-        lastName: profileData.last_name || '',
-        phoneNumber: profileData.phone_number || '',
-        professionalEmail: profileData.professional_email || '',
-        linkedinUrl: profileData.linkedin_url || '',
-        desiredPosition: profileData.desired_position || '',
-        durationMin: profileData.duration_min || null,
-        durationMax: profileData.duration_max || null,
-        availableFrom: profileData.available_from || ''
-      } : null;
 
       const { data, error } = await supabase.functions.invoke("generate-cover-letter", {
         body: {
@@ -69,7 +69,7 @@ export const GenerationStep = ({
           companyName,
           jobDescription,
           cvPdfBase64: base64,
-          profileInfo,
+          profileInfo: profileData,
         },
       });
 
@@ -128,20 +128,12 @@ export const GenerationStep = ({
     }
   };
 
+  // 🧩 Génération du PDF avec en-tête dynamique
   const downloadLetter = async () => {
-    if (!user) return;
     try {
       const { jsPDF } = await import("jspdf");
       const doc = new jsPDF({ unit: "mm", format: "a4" });
 
-      // Récupérer les infos du profil pour l'en-tête
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("first_name, last_name, phone_number, professional_email, linkedin_url, desired_position, duration_min, duration_max, available_from")
-        .eq("id", user.id)
-        .single();
-
-      // Marges
       const leftMargin = 20;
       const rightMargin = 20;
       const topMargin = 25;
@@ -150,113 +142,72 @@ export const GenerationStep = ({
       const pageHeight = doc.internal.pageSize.getHeight();
       const maxWidth = pageWidth - leftMargin - rightMargin;
 
-      let yPos = topMargin;
+      // Données du profil dynamique
+      const name = profileData
+        ? `${profileData.first_name?.toUpperCase() || ""} ${profileData.last_name?.toUpperCase() || ""}`
+        : "NOM PRÉNOM";
+
+      const subtitle = "Stage de 6 mois à partir de Février 2026";
+
+      const contact = [
+        profileData?.phone_number || "",
+        profileData?.professional_email || "",
+        profileData?.linkedin_url || "",
+      ]
+        .filter(Boolean)
+        .join("  •  ");
+
+      const title = `Stage – ${jobTitle} (${companyName})`;
 
       // --- EN-TÊTE ---
-      if (profileData) {
-        // Nom en majuscules et gras (centré)
-        const fullName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim().toUpperCase();
-        doc.setFont("Helvetica", "bold");
-        doc.setFontSize(16);
-        doc.text(fullName, pageWidth / 2, yPos, { align: "center" });
-        yPos += 8;
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(90, 90, 90);
+      doc.text(contact, pageWidth / 2, topMargin, { align: "center" });
 
-        // Sous-titre avec type de poste, durée et date de début
-        let subtitle = '';
-        if (profileData.desired_position) subtitle += profileData.desired_position;
-        if (profileData.duration_min && profileData.duration_max) {
-          subtitle += ` - de ${profileData.duration_min} à ${profileData.duration_max} mois`;
-        } else if (profileData.duration_min) {
-          subtitle += ` - ${profileData.duration_min} mois`;
-        }
-        if (profileData.available_from) {
-          subtitle += ` - à partir de ${profileData.available_from}`;
-        }
-        
-        if (subtitle) {
-          doc.setFont("Helvetica", "normal");
-          doc.setFontSize(11);
-          doc.setTextColor(60, 60, 60);
-          doc.text(subtitle, pageWidth / 2, yPos, { align: "center" });
-          yPos += 6;
-        }
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(0, 0, 0);
+      doc.text(name, pageWidth / 2, topMargin + 10, { align: "center" });
 
-        // Coordonnées sur une ligne avec séparateurs •
-        const contactParts = [];
-        if (profileData.phone_number) contactParts.push(profileData.phone_number);
-        if (profileData.professional_email) contactParts.push(profileData.professional_email);
-        if (profileData.linkedin_url) contactParts.push(profileData.linkedin_url);
-        
-        if (contactParts.length > 0) {
-          doc.setFontSize(9);
-          doc.setTextColor(80, 80, 80);
-          doc.text(contactParts.join(' • '), pageWidth / 2, yPos, { align: "center" });
-          yPos += 10;
-        }
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(12);
+      doc.setTextColor(100, 100, 100);
+      doc.text(subtitle, pageWidth / 2, topMargin + 17, { align: "center" });
 
-        // Ligne de séparation
-        doc.setDrawColor(0);
-        doc.setLineWidth(0.5);
-        doc.line(leftMargin, yPos, pageWidth - rightMargin, yPos);
-        yPos += 8;
+      doc.setDrawColor(0);
+      doc.line(leftMargin, topMargin + 22, pageWidth - leftMargin, topMargin + 22);
 
-        // Intitulé du poste en gras souligné
-        doc.setFont("Helvetica", "bold");
-        doc.setFontSize(13);
-        doc.setTextColor(0, 0, 0);
-        doc.text(jobTitle, pageWidth / 2, yPos, { align: "center" });
-        
-        // Souligner le titre
-        const titleWidth = doc.getTextWidth(jobTitle);
-        doc.line(
-          (pageWidth - titleWidth) / 2,
-          yPos + 1,
-          (pageWidth + titleWidth) / 2,
-          yPos + 1
-        );
-        yPos += 12;
-      }
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(0, 0, 0);
+      doc.text(title, pageWidth / 2, topMargin + 32, { align: "center" });
+
+      doc.setLineWidth(0.3);
+      doc.line(leftMargin, topMargin + 34, pageWidth - leftMargin, topMargin + 34);
 
       // --- TEXTE DE LA LETTRE ---
-      doc.setFont("Times", "normal");
-      doc.setFontSize(11);
+      doc.setFont("Times", "Roman");
+      doc.setFontSize(12);
       doc.setTextColor(20, 20, 20);
 
-      // Le corps de la lettre commence après l'en-tête dans generatedLetter
-      // On cherche où commence le corps (après l'en-tête formaté)
-      let letterBody = generatedLetter;
-      
-      // Retirer l'en-tête si présent (les lignes avec nom, coordonnées, titre)
-      const lines = letterBody.split('\n');
-      let bodyStartIndex = 0;
-      
-      // Chercher "Madame, Monsieur" ou une formule de politesse similaire
-      for (let i = 0; i < Math.min(lines.length, 15); i++) {
-        const line = lines[i].trim();
-        if (line.includes('Madame') || line.includes('Monsieur') || 
-            line.includes('À l\'attention') || line.includes('Objet :')) {
-          bodyStartIndex = i;
-          break;
-        }
-      }
-      
-      letterBody = lines.slice(bodyStartIndex).join('\n').trim();
-      const textLines = doc.splitTextToSize(letterBody, maxWidth);
-      
-      textLines.forEach((line: string) => {
-        if (yPos > pageHeight - bottomMargin) {
+      const lines = doc.splitTextToSize(generatedLetter, maxWidth);
+      let y = topMargin + 44;
+
+      lines.forEach((line: string) => {
+        if (y > pageHeight - bottomMargin) {
           doc.addPage();
-          yPos = topMargin;
+          y = topMargin;
         }
-        doc.text(line, leftMargin, yPos);
-        yPos += 6;
+        doc.text(line, leftMargin, y, { maxWidth });
+        y += 6;
       });
 
-      doc.save(`Lettre_${companyName.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
+      doc.save(`lettre_motivation_${companyName}_${Date.now()}.pdf`);
 
       toast({
         title: "Téléchargement réussi",
-        description: "Votre lettre a été téléchargée avec l'en-tête formaté",
+        description: "Votre lettre a été téléchargée avec l'en-tête personnalisé",
       });
     } catch (error) {
       console.error("Error downloading PDF:", error);
