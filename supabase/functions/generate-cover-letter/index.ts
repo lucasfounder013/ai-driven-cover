@@ -48,16 +48,36 @@ RÈGLES CRITIQUES :
     // Construire l'en-tête avec les informations du profil
     let headerText = '';
     if (profileInfo) {
-      const { firstName, lastName, phoneNumber, professionalEmail, linkedinUrl, desiredPosition, availableFrom } = profileInfo;
-      headerText = `${firstName} ${lastName}\n`;
-      if (professionalEmail) headerText += `${professionalEmail}\n`;
-      if (phoneNumber) headerText += `${phoneNumber}\n`;
-      if (linkedinUrl) headerText += `${linkedinUrl}\n`;
-      if (desiredPosition) headerText += `Poste recherché : ${desiredPosition}\n`;
-      if (availableFrom) headerText += `Disponibilité : ${availableFrom}\n`;
-      headerText += '\n';
-      headerText += `Objet : Candidature pour le poste de ${jobTitle}\n`;
-      headerText += '\n';
+      const { firstName, lastName, phoneNumber, professionalEmail, linkedinUrl, desiredPosition, durationMin, durationMax, availableFrom } = profileInfo;
+      
+      // Nom en majuscules et gras (centré)
+      const fullName = `${firstName || ''} ${lastName || ''}`.trim().toUpperCase();
+      headerText = `${fullName}\n\n`;
+      
+      // Sous-titre avec type de poste, durée et date de début
+      let subtitle = '';
+      if (desiredPosition) subtitle += desiredPosition;
+      if (durationMin && durationMax) {
+        subtitle += ` - de ${durationMin} à ${durationMax} mois`;
+      } else if (durationMin) {
+        subtitle += ` - ${durationMin} mois`;
+      }
+      if (availableFrom) {
+        subtitle += ` - à partir de ${availableFrom}`;
+      }
+      if (subtitle) headerText += `${subtitle}\n`;
+      
+      // Coordonnées sur une ligne avec séparateurs •
+      const contactParts = [];
+      if (phoneNumber) contactParts.push(phoneNumber);
+      if (professionalEmail) contactParts.push(professionalEmail);
+      if (linkedinUrl) contactParts.push(linkedinUrl);
+      if (contactParts.length > 0) {
+        headerText += `${contactParts.join(' • ')}\n\n`;
+      }
+      
+      // Intitulé du poste en gras souligné
+      headerText += `**${jobTitle}**\n\n`;
     }
 
     const textPrompt = `Analyse le CV fourni et rédige une lettre de motivation professionnelle pour le poste suivant :
