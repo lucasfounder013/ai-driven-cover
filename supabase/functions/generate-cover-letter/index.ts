@@ -86,20 +86,24 @@ Poste : ${jobTitle}
 Entreprise : ${companyName}
 ${jobDescription ? `Description du poste : ${jobDescription}` : ''}
 
-IMPORTANT : Commence la lettre par cet en-tête exactement (ne modifie rien) :
+IMPORTANT : Voici l'en-tête qui sera ajouté automatiquement (NE LE RÉPÈTE PAS dans ta réponse) :
 ${headerText}
 
-Instructions :
-1. Commence par l'en-tête fourni ci-dessus sans le modifier
-2. Lis attentivement le CV pour identifier les compétences, expériences et formations pertinentes
-3. Fais des liens précis entre les éléments du CV et les exigences du poste
-4. Structure le corps de la lettre avec :
-   - Une introduction mentionnant le poste et l'entreprise
-   - Un corps qui met en valeur les expériences et compétences RÉELLES du candidat en lien avec le poste
-   - Une conclusion professionnelle
-5. Utilise UNIQUEMENT les informations du CV - n'invente rien
-6. Sois concis et percutant (environ 300-400 mots pour le corps)
-7. Utilise un ton professionnel et formel`;
+Instructions CRITIQUES :
+1. NE COMMENCE PAS par l'en-tête, il sera ajouté automatiquement
+2. Commence DIRECTEMENT par "Madame, Monsieur," (ou l'équivalent approprié)
+3. N'inclus PAS le nom du candidat, ni ses coordonnées, ni le titre du poste au début de ta réponse
+4. Lis attentivement le CV pour identifier les compétences, expériences et formations pertinentes
+5. Structure le corps de la lettre avec :
+   - Salutation : "Madame, Monsieur,"
+   - Introduction mentionnant le poste et l'entreprise
+   - Corps qui met en valeur les expériences et compétences RÉELLES du candidat
+   - Conclusion professionnelle avec formule de politesse
+6. Utilise UNIQUEMENT les informations du CV - n'invente rien
+7. Sois concis et percutant (environ 300-400 mots)
+8. Ton professionnel et formel
+
+Rappel : L'en-tête avec le nom, coordonnées et titre est déjà présent, commence directement par la salutation.`;
 
     content.push({
       type: 'text',
@@ -145,7 +149,10 @@ Instructions :
     }
 
     const data = await response.json();
-    const generatedLetter = data.content[0].text;
+    const generatedBody = data.content[0].text;
+    
+    // Combiner l'en-tête avec le corps généré
+    const generatedLetter = headerText + generatedBody;
 
     return new Response(
       JSON.stringify({ generatedLetter }),

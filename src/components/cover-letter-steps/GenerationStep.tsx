@@ -222,22 +222,25 @@ export const GenerationStep = ({
       doc.setFontSize(11);
       doc.setTextColor(20, 20, 20);
 
-      // Extraire uniquement le corps de la lettre (sans l'en-tête généré par l'IA)
+      // Le corps de la lettre commence après l'en-tête dans generatedLetter
+      // On cherche où commence le corps (après l'en-tête formaté)
       let letterBody = generatedLetter;
-      // Retirer l'en-tête si présent dans la lettre générée
+      
+      // Retirer l'en-tête si présent (les lignes avec nom, coordonnées, titre)
       const lines = letterBody.split('\n');
-      let startIndex = 0;
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].includes('Madame, Monsieur') || lines[i].includes('Objet :') || lines[i].trim().startsWith('À l\'attention')) {
-          startIndex = i;
+      let bodyStartIndex = 0;
+      
+      // Chercher "Madame, Monsieur" ou une formule de politesse similaire
+      for (let i = 0; i < Math.min(lines.length, 15); i++) {
+        const line = lines[i].trim();
+        if (line.includes('Madame') || line.includes('Monsieur') || 
+            line.includes('À l\'attention') || line.includes('Objet :')) {
+          bodyStartIndex = i;
           break;
         }
-        if (lines[i].includes(jobTitle) && i < 10) {
-          startIndex = i + 1;
-        }
       }
-      letterBody = lines.slice(startIndex).join('\n').trim();
-
+      
+      letterBody = lines.slice(bodyStartIndex).join('\n').trim();
       const textLines = doc.splitTextToSize(letterBody, maxWidth);
       
       textLines.forEach((line: string) => {
