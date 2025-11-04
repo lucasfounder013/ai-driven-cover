@@ -58,7 +58,11 @@ RÈGLES CRITIQUES :
       let subtitle = '';
       if (desiredPosition) subtitle += desiredPosition;
       if (durationMin && durationMax) {
-        subtitle += ` - de ${durationMin} à ${durationMax} mois`;
+        if (durationMin === durationMax) {
+          subtitle += ` - ${durationMin} mois`;
+        } else {
+          subtitle += ` - de ${durationMin} à ${durationMax} mois`;
+        }
       } else if (durationMin) {
         subtitle += ` - ${durationMin} mois`;
       }

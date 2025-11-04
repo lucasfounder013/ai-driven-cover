@@ -165,7 +165,11 @@ export const GenerationStep = ({
         let subtitle = '';
         if (profileData.desired_position) subtitle += profileData.desired_position;
         if (profileData.duration_min && profileData.duration_max) {
-          subtitle += ` - de ${profileData.duration_min} à ${profileData.duration_max} mois`;
+          if (profileData.duration_min === profileData.duration_max) {
+            subtitle += ` - ${profileData.duration_min} mois`;
+          } else {
+            subtitle += ` - de ${profileData.duration_min} à ${profileData.duration_max} mois`;
+          }
         } else if (profileData.duration_min) {
           subtitle += ` - ${profileData.duration_min} mois`;
         }
