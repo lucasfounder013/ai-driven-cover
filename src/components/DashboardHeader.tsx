@@ -3,9 +3,20 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
-const DashboardHeader = () => {
+interface DashboardHeaderProps {
+  onLogoClick?: () => void;
+}
+
+const DashboardHeader = ({ onLogoClick }: DashboardHeaderProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  
+  const handleLogoClick = () => {
+    if (onLogoClick) {
+      onLogoClick();
+    }
+    navigate('/dashboard');
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -16,7 +27,7 @@ const DashboardHeader = () => {
     <header className="border-b border-border bg-background">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <button 
-          onClick={() => navigate('/dashboard')} 
+          onClick={handleLogoClick} 
           className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
         >
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
