@@ -71,7 +71,7 @@ export const useAuth = () => {
 
       toast({
         title: "Connexion réussie !",
-        description: "Bienvenue sur CoverLetter AI",
+        description: "Bienvenue sur Job Boost",
       });
 
       return { data, error: null };

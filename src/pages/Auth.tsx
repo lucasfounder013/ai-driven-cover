@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText } from 'lucide-react';
+import { Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -59,11 +59,10 @@ const Auth = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center">
-              <FileText className="w-7 h-7 text-primary-foreground" />
+              <Rocket className="w-7 h-7 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold">
-              <span className="text-foreground">CoverLetter</span>{" "}
-              <span className="text-primary">AI</span>
+            <span className="text-2xl font-bold text-primary">
+              Job Boost
             </span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">

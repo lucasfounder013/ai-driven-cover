@@ -1,4 +1,4 @@
-import { FileText, User, LogOut, UserCircle } from "lucide-react";
+import { Rocket, User, LogOut, UserCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,10 @@ const DashboardHeader = () => {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-            <FileText className="w-6 h-6 text-primary-foreground" />
+            <Rocket className="w-6 h-6 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold">
-            <span className="text-foreground">CoverLetter</span>{" "}
-            <span className="text-primary">AI</span>
+          <span className="text-xl font-bold text-primary">
+            Job Boost
           </span>
         </div>
 
