@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { jobTitle, companyName, jobDescription, cvPdfBase64, profileInfo } = await req.json();
+    const { jobTitle, companyName, jobDescription, cvPdfBase64, profileInfo, additionalInfo } = await req.json();
     
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     if (!ANTHROPIC_API_KEY) {
@@ -85,6 +85,7 @@ RÈGLES CRITIQUES :
 Poste : ${jobTitle}
 Entreprise : ${companyName}
 ${jobDescription ? `Description du poste : ${jobDescription}` : ''}
+${additionalInfo ? `\nInformations complémentaires du candidat à IMPÉRATIVEMENT intégrer dans la lettre :\n${additionalInfo}` : ''}
 
 IMPORTANT : Voici l'en-tête qui sera ajouté automatiquement (NE LE RÉPÈTE PAS dans ta réponse) :
 ${headerText}
@@ -94,14 +95,15 @@ Instructions CRITIQUES :
 2. Commence DIRECTEMENT par "Madame, Monsieur," (ou l'équivalent approprié)
 3. N'inclus PAS le nom du candidat, ni ses coordonnées, ni le titre du poste au début de ta réponse
 4. Lis attentivement le CV pour identifier les compétences, expériences et formations pertinentes
-5. Structure le corps de la lettre avec :
+5. ${additionalInfo ? 'IMPORTANT : Intègre IMPÉRATIVEMENT les informations complémentaires fournies par le candidat de manière naturelle dans la lettre' : ''}
+6. Structure le corps de la lettre avec :
    - Salutation : "Madame, Monsieur,"
    - Introduction mentionnant le poste et l'entreprise
    - Corps qui met en valeur les expériences et compétences RÉELLES du candidat
    - Conclusion professionnelle avec formule de politesse
-6. Utilise UNIQUEMENT les informations du CV - n'invente rien
-7. Sois concis et percutant (environ 300-400 mots)
-8. Ton professionnel et formel
+7. Utilise UNIQUEMENT les informations du CV ${additionalInfo ? 'et les informations complémentaires fournies' : ''} - n'invente rien
+8. Sois concis et percutant (environ 300-400 mots)
+9. Ton professionnel et formel
 
 Rappel : L'en-tête avec le nom, coordonnées et titre est déjà présent, commence directement par la salutation.`;
 

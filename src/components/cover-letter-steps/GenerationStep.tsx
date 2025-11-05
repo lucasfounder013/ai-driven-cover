@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Loader2, Download, Sparkles, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +32,7 @@ export const GenerationStep = ({
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
+  const [additionalInfo, setAdditionalInfo] = useState('');
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -72,6 +74,7 @@ export const GenerationStep = ({
           jobDescription,
           cvPdfBase64: base64,
           profileInfo: profileData,
+          additionalInfo: additionalInfo.trim() || undefined,
         },
       });
 
@@ -293,7 +296,7 @@ export const GenerationStep = ({
 
   if (!generatedLetter) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 space-y-6">
+      <div className="flex flex-col items-center justify-center py-16 space-y-6 max-w-3xl mx-auto">
         <Sparkles className="w-20 h-20 text-primary" />
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold text-foreground">
@@ -303,6 +306,23 @@ export const GenerationStep = ({
             Cliquez sur le bouton ci-dessous pour lancer la génération
           </p>
         </div>
+        
+        <div className="w-full space-y-2">
+          <Label htmlFor="additionalInfo" className="text-sm font-medium">
+            Informations complémentaires (optionnel)
+          </Label>
+          <Textarea
+            id="additionalInfo"
+            placeholder="Ajoutez ici toute information pertinente qui ne figure pas sur votre CV (projets spécifiques, motivations particulières, compétences à mettre en avant, etc.)"
+            value={additionalInfo}
+            onChange={(e) => setAdditionalInfo(e.target.value)}
+            className="min-h-[120px]"
+          />
+          <p className="text-xs text-muted-foreground">
+            Ces informations seront prises en compte par l'IA lors de la génération de votre lettre
+          </p>
+        </div>
+
         <Button onClick={generateLetter} size="lg" className="mt-4">
           <Sparkles className="w-5 h-5 mr-2" />
           Générer ma lettre
