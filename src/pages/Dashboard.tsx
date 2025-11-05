@@ -3,12 +3,20 @@ import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, Trash2, Pencil, Copy } from "lucide-react";
+import { FileText, Plus, Trash2, Pencil, Copy, Edit2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CoverLetterForm } from "@/components/CoverLetterForm";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
@@ -18,6 +26,8 @@ const Dashboard = () => {
   const [letters, setLetters] = useState<any[]>([]);
   const [loadingLetters, setLoadingLetters] = useState(true);
   const [editingLetter, setEditingLetter] = useState<any>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingField, setEditingField] = useState<{ id: string; field: 'company_name' | 'job_title'; value: string } | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -89,6 +99,44 @@ const Dashboard = () => {
   const openLetter = (letter: any) => {
     setEditingLetter(letter);
     setShowForm(true);
+  };
+
+  const openEditDialog = (letter: any, field: 'company_name' | 'job_title') => {
+    setEditingField({
+      id: letter.id,
+      field,
+      value: letter[field]
+    });
+    setEditDialogOpen(true);
+  };
+
+  const saveFieldEdit = async () => {
+    if (!editingField) return;
+
+    try {
+      const { error } = await supabase
+        .from('cover_letters')
+        .update({ [editingField.field]: editingField.value })
+        .eq('id', editingField.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Modifié",
+        description: "La modification a été enregistrée",
+      });
+
+      fetchLetters();
+      setEditDialogOpen(false);
+      setEditingField(null);
+    } catch (error: any) {
+      console.error('Error updating field:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de modifier",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -169,17 +217,46 @@ const Dashboard = () => {
                   <TableBody>
                     {letters.map((letter) => (
                       <TableRow key={letter.id}>
-                        <TableCell 
-                          className="font-medium cursor-pointer hover:text-primary transition-colors"
-                          onClick={() => openLetter(letter)}
-                        >
-                          {letter.company_name}
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <span 
+                              className="cursor-pointer hover:text-primary transition-colors"
+                              onClick={() => openLetter(letter)}
+                              title={letter.company_name}
+                            >
+                              {letter.company_name.length > 20 
+                                ? `${letter.company_name.substring(0, 20)}...` 
+                                : letter.company_name}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => openEditDialog(letter, 'company_name')}
+                              title="Modifier le nom de l'entreprise"
+                              className="h-6 w-6 p-0"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </Button>
+                          </div>
                         </TableCell>
-                        <TableCell 
-                          className="cursor-pointer hover:text-primary transition-colors"
-                          onClick={() => openLetter(letter)}
-                        >
-                          {letter.job_title}
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span 
+                              className="cursor-pointer hover:text-primary transition-colors"
+                              onClick={() => openLetter(letter)}
+                            >
+                              {letter.job_title}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => openEditDialog(letter, 'job_title')}
+                              title="Modifier le poste"
+                              className="h-6 w-6 p-0"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </Button>
+                          </div>
                         </TableCell>
                         <TableCell>{new Date(letter.created_at).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
@@ -230,6 +307,31 @@ const Dashboard = () => {
           </div>
         )}
       </main>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingField?.field === 'company_name' 
+                ? "Modifier le nom de l'entreprise" 
+                : "Modifier le poste"}
+            </DialogTitle>
+          </DialogHeader>
+          <Input
+            value={editingField?.value || ''}
+            onChange={(e) => setEditingField(editingField ? { ...editingField, value: e.target.value } : null)}
+            placeholder={editingField?.field === 'company_name' ? "Nom de l'entreprise" : "Poste"}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={saveFieldEdit}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
