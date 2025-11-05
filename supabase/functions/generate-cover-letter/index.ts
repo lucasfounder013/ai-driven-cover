@@ -154,8 +154,74 @@ Rappel : L'en-tête avec le nom, coordonnées et titre est déjà présent, comm
     // Combiner l'en-tête avec le corps généré
     const generatedLetter = headerText + generatedBody;
 
+    // Générer le mail de candidature
+    console.log('Generating application email with Claude...');
+    const applicationEmailPrompt = `En te basant sur les informations suivantes, génère un email professionnel et concis pour postuler au poste de ${jobTitle} chez ${companyName}.
+
+Instructions :
+- Commence par "Objet : Candidature pour le poste de ${jobTitle}"
+- Email court (5-8 lignes maximum)
+- Ton professionnel et enthousiaste
+- Mentionne que le CV et la lettre de motivation sont en pièce jointe
+- Utilise les informations du profil pour personnaliser : ${profileInfo ? `${profileInfo.firstName} ${profileInfo.lastName}` : 'le candidat'}
+- Termine par une formule de politesse`;
+
+    const emailResponse = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1024,
+        messages: [
+          { role: 'user', content: applicationEmailPrompt }
+        ],
+      }),
+    });
+
+    const emailData = await emailResponse.json();
+    const applicationEmail = emailData.content[0].text;
+
+    // Générer le mail de relance
+    console.log('Generating follow-up email with Claude...');
+    const followupEmailPrompt = `Génère un email de relance professionnel pour le poste de ${jobTitle} chez ${companyName}, à envoyer 7-10 jours après la candidature initiale.
+
+Instructions :
+- Commence par "Objet : Relance - Candidature ${jobTitle}"
+- Email court et poli (5-7 lignes)
+- Rappelle brièvement la candidature
+- Exprime l'intérêt toujours présent pour le poste
+- Demande des nouvelles du processus de recrutement
+- Ton courtois et professionnel, sans être insistant`;
+
+    const followupResponse = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1024,
+        messages: [
+          { role: 'user', content: followupEmailPrompt }
+        ],
+      }),
+    });
+
+    const followupData = await followupResponse.json();
+    const followupEmail = followupData.content[0].text;
+
     return new Response(
-      JSON.stringify({ generatedLetter }),
+      JSON.stringify({ 
+        generatedLetter,
+        applicationEmail,
+        followupEmail
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

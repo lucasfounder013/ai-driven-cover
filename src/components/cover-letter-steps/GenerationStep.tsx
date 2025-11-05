@@ -78,9 +78,39 @@ export const GenerationStep = ({
       if (error) throw error;
       setGeneratedLetter(data.generatedLetter);
 
+      // Sauvegarder automatiquement avec les emails générés
+      if (data.applicationEmail && data.followupEmail) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          if (existingLetterId) {
+            await supabase
+              .from("cover_letters")
+              .update({
+                generated_letter: data.generatedLetter,
+                application_email: data.applicationEmail,
+                followup_email: data.followupEmail,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", existingLetterId);
+          } else {
+            await supabase.from("cover_letters").insert({
+              user_id: session.user.id,
+              job_title: jobTitle,
+              company_name: companyName,
+              job_description: jobDescription,
+              cv_text: cvPath,
+              generated_letter: data.generatedLetter,
+              application_email: data.applicationEmail,
+              followup_email: data.followupEmail,
+              status: "draft",
+            });
+          }
+        }
+      }
+
       toast({
-        title: "Lettre générée",
-        description: "Votre lettre de motivation a été créée avec succès",
+        title: "Lettre et emails générés",
+        description: "Votre lettre et les emails ont été créés avec succès",
       });
     } catch (error: any) {
       console.error("Error generating letter:", error);
@@ -110,29 +140,17 @@ export const GenerationStep = ({
             company_name: companyName,
             job_description: jobDescription,
             generated_letter: generatedLetter,
+            status: "final",
             updated_at: new Date().toISOString(),
           })
           .eq("id", existingLetterId);
 
         if (error) throw error;
-      } else {
-        // Création d'une nouvelle lettre
-        const { error } = await supabase.from("cover_letters").insert({
-          user_id: session.user.id,
-          job_title: jobTitle,
-          company_name: companyName,
-          job_description: jobDescription,
-          cv_text: cvPath,
-          generated_letter: generatedLetter,
-          status: "final",
-        });
-
-        if (error) throw error;
       }
 
       toast({
-        title: "Lettre sauvegardée",
-        description: "Votre lettre a été enregistrée avec succès",
+        title: "Lettre finalisée",
+        description: "Votre lettre a été marquée comme finale",
       });
       onReset();
     } catch (error: any) {
