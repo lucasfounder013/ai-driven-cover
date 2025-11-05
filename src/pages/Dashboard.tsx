@@ -18,8 +18,7 @@ const Dashboard = () => {
   const [showForm, setShowForm] = useState(false);
   const [letters, setLetters] = useState<any[]>([]);
   const [loadingLetters, setLoadingLetters] = useState(true);
-  const [selectedLetter, setSelectedLetter] = useState<any>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingLetter, setEditingLetter] = useState<any>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -89,8 +88,8 @@ const Dashboard = () => {
   };
 
   const openLetter = (letter: any) => {
-    setSelectedLetter(letter);
-    setIsDialogOpen(true);
+    setEditingLetter(letter);
+    setShowForm(true);
   };
 
   if (loading) {
@@ -124,7 +123,10 @@ const Dashboard = () => {
                   Gérez et créez vos lettres de motivation
                 </p>
               </div>
-              <Button size="lg" className="gap-2" onClick={() => setShowForm(true)}>
+              <Button size="lg" className="gap-2" onClick={() => {
+                setEditingLetter(null);
+                setShowForm(true);
+              }}>
                 <Plus className="w-5 h-5" />
                 Nouvelle lettre
               </Button>
@@ -146,7 +148,10 @@ const Dashboard = () => {
                 <p className="text-muted-foreground mb-8 max-w-md">
                   Créez votre première lettre de motivation avec l'IA
                 </p>
-                <Button size="lg" className="gap-2" onClick={() => setShowForm(true)}>
+                <Button size="lg" className="gap-2" onClick={() => {
+                  setEditingLetter(null);
+                  setShowForm(true);
+                }}>
                   <Plus className="w-5 h-5" />
                   Créer ma première lettre
                 </Button>
@@ -215,17 +220,17 @@ const Dashboard = () => {
           </>
         ) : (
           <div className="max-w-4xl mx-auto">
-            <CoverLetterForm />
+            <CoverLetterForm 
+              editingLetter={editingLetter}
+              onBack={() => {
+                setShowForm(false);
+                setEditingLetter(null);
+                fetchLetters();
+              }}
+            />
           </div>
         )}
       </main>
-
-      <LetterViewDialog
-        letter={selectedLetter}
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onUpdate={fetchLetters}
-      />
     </div>
   );
 };

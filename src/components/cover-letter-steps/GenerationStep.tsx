@@ -14,6 +14,7 @@ interface GenerationStepProps {
   generatedLetter: string;
   setGeneratedLetter: (letter: string) => void;
   onReset: () => void;
+  existingLetterId?: string;
 }
 
 export const GenerationStep = ({
@@ -24,6 +25,7 @@ export const GenerationStep = ({
   generatedLetter,
   setGeneratedLetter,
   onReset,
+  existingLetterId,
 }: GenerationStepProps) => {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -99,22 +101,44 @@ export const GenerationStep = ({
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Session invalide");
 
-      const { error } = await supabase.from("cover_letters").insert({
-        user_id: session.user.id,
-        job_title: jobTitle,
-        company_name: companyName,
-        job_description: jobDescription,
-        cv_text: cvPath,
-        generated_letter: generatedLetter,
-        status: "final",
-      });
+      if (existingLetterId) {
+        // Mise à jour de la lettre existante
+        const { error } = await supabase
+          .from("cover_letters")
+          .update({
+            job_title: jobTitle,
+            company_name: companyName,
+            job_description: jobDescription,
+            generated_letter: generatedLetter,
+          })
+          .eq("id", existingLetterId);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Lettre sauvegardée",
-        description: "Votre lettre a été enregistrée avec succès",
-      });
+        toast({
+          title: "Lettre mise à jour",
+          description: "Votre lettre a été modifiée avec succès",
+        });
+      } else {
+        // Création d'une nouvelle lettre
+        const { error } = await supabase.from("cover_letters").insert({
+          user_id: session.user.id,
+          job_title: jobTitle,
+          company_name: companyName,
+          job_description: jobDescription,
+          cv_text: cvPath,
+          generated_letter: generatedLetter,
+          status: "final",
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Lettre sauvegardée",
+          description: "Votre lettre a été enregistrée avec succès",
+        });
+      }
+      
       onReset();
     } catch (error: any) {
       console.error("Error saving letter:", error);
