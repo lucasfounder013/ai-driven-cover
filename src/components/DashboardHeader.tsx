@@ -1,4 +1,4 @@
-import { Rocket, User, LogOut, UserCircle } from "lucide-react";
+import { Rocket, LogOut, UserCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -39,10 +39,6 @@ const DashboardHeader = ({ onLogoClick }: DashboardHeaderProps) => {
         </button>
 
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-foreground">
-            <User className="w-5 h-5" />
-            <span className="font-medium">{user?.email}</span>
-          </div>
           <Button
             variant="ghost"
             size="sm"
