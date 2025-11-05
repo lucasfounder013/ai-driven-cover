@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -6,12 +6,7 @@ import { CVUploadStep } from "./cover-letter-steps/CVUploadStep";
 import { JobDetailsStep } from "./cover-letter-steps/JobDetailsStep";
 import { GenerationStep } from "./cover-letter-steps/GenerationStep";
 
-interface CoverLetterFormProps {
-  editingLetter?: any;
-  onBack?: () => void;
-}
-
-export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps) => {
+export const CoverLetterForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvPath, setCvPath] = useState<string>("");
@@ -19,19 +14,6 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
   const [companyName, setCompanyName] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [generatedLetter, setGeneratedLetter] = useState("");
-
-  // Pré-remplir le formulaire si on édite une lettre existante
-  useEffect(() => {
-    if (editingLetter) {
-      setJobTitle(editingLetter.job_title || "");
-      setCompanyName(editingLetter.company_name || "");
-      setJobDescription(editingLetter.job_description || "");
-      setCvPath(editingLetter.cv_path || "");
-      setGeneratedLetter(editingLetter.generated_letter || "");
-      // Si on édite, on saute directement à l'étape 3
-      setCurrentStep(3);
-    }
-  }, [editingLetter]);
 
   const canProceedToStep2 = cvFile !== null;
   const canProceedToStep3 = jobTitle.trim() !== "" && companyName.trim() !== "";
@@ -51,18 +33,15 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
   };
 
   const resetForm = () => {
-    if (onBack) {
-      onBack();
-    } else {
-      setCurrentStep(1);
-      setCvFile(null);
-      setCvPath("");
-      setJobTitle("");
-      setCompanyName("");
-      setJobDescription("");
-      setGeneratedLetter("");
-      window.location.reload();
-    }
+    setCurrentStep(1);
+    setCvFile(null);
+    setCvPath("");
+    setJobTitle("");
+    setCompanyName("");
+    setJobDescription("");
+    setGeneratedLetter("");
+    // Recharger la page pour revenir au dashboard
+    window.location.reload();
   };
 
   return (
@@ -127,7 +106,6 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
             generatedLetter={generatedLetter}
             setGeneratedLetter={setGeneratedLetter}
             onReset={resetForm}
-            existingLetterId={editingLetter?.id}
           />
         )}
       </div>
