@@ -73,7 +73,7 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
           className="mb-6"
         >
           <ChevronLeft className="w-4 h-4 mr-2" />
-          Retour au dashboard
+          Retour
         </Button>
       )}
       
