@@ -66,6 +66,17 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
 
   return (
     <Card className="p-8">
+      {onBack && (
+        <Button
+          variant="outline"
+          onClick={onBack}
+          className="mb-6"
+        >
+          <ChevronLeft className="w-4 h-4 mr-2" />
+          Retour au dashboard
+        </Button>
+      )}
+      
       <div className="mb-8">
         <div className="flex items-center mb-4">
           {[1, 2, 3].map((step) => (
