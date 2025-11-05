@@ -53,7 +53,16 @@ export const GenerationStep = ({
     if (!user) return;
     setGenerating(true);
     try {
-      await fetchProfile();
+      // Récupérer le profil d'abord
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, phone_number, professional_email, linkedin_url")
+        .eq("id", user.id)
+        .single();
+      
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+      }
 
       // Télécharger le CV
       const {
@@ -72,7 +81,7 @@ export const GenerationStep = ({
           companyName,
           jobDescription,
           cvPdfBase64: base64,
-          profileInfo: profileData,
+          profileInfo: profile,
           additionalInfo: additionalInfo.trim() || undefined
         }
       });
