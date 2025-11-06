@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, Trash2, Pencil, Copy, Edit2 } from "lucide-react";
+import { FileText, Plus, Trash2, Pencil, Copy, Edit2, Eye } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CoverLetterForm } from "@/components/CoverLetterForm";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { EmailViewDialog } from "@/components/EmailViewDialog";
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
@@ -28,6 +29,8 @@ const Dashboard = () => {
   const [editingLetter, setEditingLetter] = useState<any>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingField, setEditingField] = useState<{ id: string; field: 'company_name' | 'job_title'; value: string } | null>(null);
+  const [viewingLetter, setViewingLetter] = useState<any>(null);
+  const [emailViewOpen, setEmailViewOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -99,6 +102,11 @@ const Dashboard = () => {
   const openLetter = (letter: any) => {
     setEditingLetter(letter);
     setShowForm(true);
+  };
+
+  const viewLetter = (letter: any) => {
+    setViewingLetter(letter);
+    setEmailViewOpen(true);
   };
 
   const openEditDialog = (letter: any, field: 'company_name' | 'job_title') => {
@@ -264,6 +272,14 @@ const Dashboard = () => {
                             <Button
                               size="sm"
                               variant="ghost"
+                              onClick={() => viewLetter(letter)}
+                              title="Voir la lettre et les emails"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
                               onClick={() => copyLetter(letter)}
                               title="Copier la lettre"
                             >
@@ -332,6 +348,12 @@ const Dashboard = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <EmailViewDialog
+        open={emailViewOpen}
+        onOpenChange={setEmailViewOpen}
+        letter={viewingLetter}
+      />
     </div>
   );
 };

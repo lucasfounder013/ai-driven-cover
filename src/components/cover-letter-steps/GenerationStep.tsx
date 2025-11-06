@@ -17,6 +17,11 @@ interface GenerationStepProps {
   existingLetterId?: string;
 }
 
+interface EmailsData {
+  applicationEmail: string;
+  followupEmail: string;
+}
+
 export const GenerationStep = ({
   cvPath,
   jobTitle,
@@ -31,6 +36,7 @@ export const GenerationStep = ({
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
+  const [emails, setEmails] = useState<EmailsData>({ applicationEmail: "", followupEmail: "" });
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -75,10 +81,14 @@ export const GenerationStep = ({
 
       if (error) throw error;
       setGeneratedLetter(data.generatedLetter);
+      setEmails({
+        applicationEmail: data.applicationEmail || "",
+        followupEmail: data.followupEmail || "",
+      });
 
       toast({
-        title: "Lettre générée",
-        description: "Votre lettre de motivation a été créée avec succès",
+        title: "Lettre et emails générés",
+        description: "Votre lettre de motivation et les emails ont été créés avec succès",
       });
     } catch (error: any) {
       console.error("Error generating letter:", error);
@@ -108,6 +118,8 @@ export const GenerationStep = ({
             company_name: companyName,
             job_description: jobDescription,
             generated_letter: generatedLetter,
+            application_email: emails.applicationEmail,
+            followup_email: emails.followupEmail,
             updated_at: new Date().toISOString(),
           })
           .eq("id", existingLetterId);
@@ -122,6 +134,8 @@ export const GenerationStep = ({
           job_description: jobDescription,
           cv_text: cvPath,
           generated_letter: generatedLetter,
+          application_email: emails.applicationEmail,
+          followup_email: emails.followupEmail,
           status: "final",
         });
 

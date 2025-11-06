@@ -140,7 +140,85 @@ Règles :
     const generatedBody = data?.content?.[0]?.text ?? "";
     const generatedLetter = headerText + generatedBody;
 
-    return new Response(JSON.stringify({ generatedLetter }), {
+    // Générer l'email de candidature
+    console.log("Generating application email...");
+    const applicationEmailPrompt = `Rédige un email professionnel en français pour postuler au poste de "${jobTitle}" chez ${companyName}.
+
+L'email doit :
+- Être concis (150-200 mots maximum)
+- Avoir un objet d'email accrocheur
+- Mentionner la lettre de motivation et le CV en pièces jointes
+- Être formel et professionnel
+- Exprimer l'enthousiasme pour le poste
+
+Format de réponse :
+Objet: [objet de l'email]
+
+[Corps de l'email]`;
+
+    const applicationEmailResponse = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5",
+        max_tokens: 1024,
+        messages: [{ role: "user", content: applicationEmailPrompt }],
+      }),
+    });
+
+    if (!applicationEmailResponse.ok) {
+      console.error("Error generating application email");
+    }
+
+    const applicationEmailData = await applicationEmailResponse.json();
+    const applicationEmail = applicationEmailData?.content?.[0]?.text ?? "";
+
+    // Générer l'email de relance
+    console.log("Generating followup email...");
+    const followupEmailPrompt = `Rédige un email de relance professionnel en français pour le poste de "${jobTitle}" chez ${companyName}.
+
+L'email doit :
+- Être concis (100-150 mots maximum)
+- Rappeler poliment la candidature
+- Montrer l'intérêt continu pour le poste
+- Être courtois et professionnel
+- Demander un retour sur la candidature
+
+Format de réponse :
+Objet: [objet de l'email]
+
+[Corps de l'email]`;
+
+    const followupEmailResponse = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5",
+        max_tokens: 1024,
+        messages: [{ role: "user", content: followupEmailPrompt }],
+      }),
+    });
+
+    if (!followupEmailResponse.ok) {
+      console.error("Error generating followup email");
+    }
+
+    const followupEmailData = await followupEmailResponse.json();
+    const followupEmail = followupEmailData?.content?.[0]?.text ?? "";
+
+    return new Response(JSON.stringify({ 
+      generatedLetter,
+      applicationEmail,
+      followupEmail
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
