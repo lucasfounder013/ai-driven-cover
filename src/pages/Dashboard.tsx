@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, Trash2, Pencil, Copy, Edit2, Eye } from "lucide-react";
+import { FileText, Plus, Trash2, Pencil, Copy, Edit2, Mail, MailCheck } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CoverLetterForm } from "@/components/CoverLetterForm";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { EmailViewDialog } from "@/components/EmailViewDialog";
+import { EmailEditDialog } from "@/components/EmailEditDialog";
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
@@ -29,8 +29,8 @@ const Dashboard = () => {
   const [editingLetter, setEditingLetter] = useState<any>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingField, setEditingField] = useState<{ id: string; field: 'company_name' | 'job_title'; value: string } | null>(null);
-  const [viewingLetter, setViewingLetter] = useState<any>(null);
-  const [emailViewOpen, setEmailViewOpen] = useState(false);
+  const [emailEditOpen, setEmailEditOpen] = useState(false);
+  const [editingEmail, setEditingEmail] = useState<{ letter: any; type: "application" | "followup" } | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -104,9 +104,38 @@ const Dashboard = () => {
     setShowForm(true);
   };
 
-  const viewLetter = (letter: any) => {
-    setViewingLetter(letter);
-    setEmailViewOpen(true);
+  const openEmailEdit = (letter: any, type: "application" | "followup") => {
+    setEditingEmail({ letter, type });
+    setEmailEditOpen(true);
+  };
+
+  const saveEmailEdit = async (content: string) => {
+    if (!editingEmail) return;
+
+    const field = editingEmail.type === "application" ? "application_email" : "followup_email";
+
+    try {
+      const { error } = await supabase
+        .from("cover_letters")
+        .update({ [field]: content })
+        .eq("id", editingEmail.letter.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Email mis à jour",
+        description: "Les modifications ont été enregistrées",
+      });
+
+      fetchLetters();
+    } catch (error: any) {
+      console.error("Error updating email:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour l'email",
+        variant: "destructive",
+      });
+    }
   };
 
   const openEditDialog = (letter: any, field: 'company_name' | 'job_title') => {
@@ -272,10 +301,18 @@ const Dashboard = () => {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => viewLetter(letter)}
-                              title="Voir la lettre et les emails"
+                              onClick={() => openEmailEdit(letter, "application")}
+                              title="Email de candidature"
                             >
-                              <Eye className="w-4 h-4" />
+                              <Mail className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => openEmailEdit(letter, "followup")}
+                              title="Email de relance"
+                            >
+                              <MailCheck className="w-4 h-4" />
                             </Button>
                             <Button
                               size="sm"
@@ -349,11 +386,21 @@ const Dashboard = () => {
         </DialogContent>
       </Dialog>
 
-      <EmailViewDialog
-        open={emailViewOpen}
-        onOpenChange={setEmailViewOpen}
-        letter={viewingLetter}
-      />
+      {editingEmail && (
+        <EmailEditDialog
+          open={emailEditOpen}
+          onOpenChange={setEmailEditOpen}
+          emailType={editingEmail.type}
+          emailContent={
+            editingEmail.type === "application"
+              ? editingEmail.letter.application_email
+              : editingEmail.letter.followup_email
+          }
+          onSave={saveEmailEdit}
+          companyName={editingEmail.letter.company_name}
+          jobTitle={editingEmail.letter.job_title}
+        />
+      )}
     </div>
   );
 };
