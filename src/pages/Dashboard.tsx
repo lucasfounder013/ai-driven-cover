@@ -17,6 +17,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { EmailEditDialog } from "@/components/EmailEditDialog";
 
 const Dashboard = () => {
@@ -182,6 +189,53 @@ const Dashboard = () => {
     }
   };
 
+  const updateResponseStatus = async (letterId: string, status: string) => {
+    try {
+      const { error } = await supabase
+        .from('cover_letters')
+        .update({ response_status: status })
+        .eq('id', letterId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Statut mis à jour",
+        description: "Le statut de la réponse a été mis à jour",
+      });
+
+      fetchLetters();
+    } catch (error: any) {
+      console.error('Error updating response status:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getResponseStatusColor = (status: string) => {
+    switch (status) {
+      case 'positive':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'negative':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+    }
+  };
+
+  const getResponseStatusLabel = (status: string) => {
+    switch (status) {
+      case 'positive':
+        return 'Réponse positive';
+      case 'negative':
+        return 'Réponse négative';
+      default:
+        return 'Pas de réponse';
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -255,6 +309,7 @@ const Dashboard = () => {
                       <TableHead>Poste</TableHead>
                       <TableHead>Email de candidature</TableHead>
                       <TableHead>Email de relance</TableHead>
+                      <TableHead>Réponse</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -323,6 +378,21 @@ const Dashboard = () => {
                             <MailCheck className="w-4 h-4 mr-2" />
                             {letter.followup_email ? "Voir / Modifier" : "Non généré"}
                           </Button>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={letter.response_status || 'no_response'}
+                            onValueChange={(value) => updateResponseStatus(letter.id, value)}
+                          >
+                            <SelectTrigger className={`w-full ${getResponseStatusColor(letter.response_status || 'no_response')}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="no_response">Pas de réponse</SelectItem>
+                              <SelectItem value="positive">Réponse positive</SelectItem>
+                              <SelectItem value="negative">Réponse négative</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
