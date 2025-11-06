@@ -34,25 +34,24 @@ export const GenerationStep = ({
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // 🔹 Récupère le profil utilisateur dès qu'on a un user
-  const fetchProfile = async () => {
-    if (!user) return;
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("first_name, last_name, phone_number, professional_email, linkedin_url")
-      .eq("id", user.id)
-      .single();
-    if (error) console.error("Error fetching profile:", error);
-    else setProfileData(data);
-  };
-
   // Appel de fetchProfile quand on génère la lettre
   const generateLetter = async () => {
     if (!user) return;
 
     setGenerating(true);
     try {
-      await fetchProfile();
+      // Récupérer le profil directement ici
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, phone_number, professional_email, linkedin_url, desired_position, duration_min, duration_max, available_from")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+      } else {
+        setProfileData(profile);
+      }
 
       // Télécharger le CV
       const { data: cvData, error: downloadError } = await supabase.storage
@@ -71,7 +70,7 @@ export const GenerationStep = ({
           companyName,
           jobDescription,
           cvPdfBase64: base64,
-          profileInfo: profileData,
+          profileInfo: profile,
         },
       });
 
