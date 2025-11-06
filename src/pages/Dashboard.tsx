@@ -247,6 +247,8 @@ const Dashboard = () => {
                     <TableRow>
                       <TableHead>Nom de l'entreprise</TableHead>
                       <TableHead>Poste</TableHead>
+                      <TableHead>Email de candidature</TableHead>
+                      <TableHead>Email de relance</TableHead>
                       <TableHead>Création</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -295,25 +297,31 @@ const Dashboard = () => {
                             </Button>
                           </div>
                         </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openEmailEdit(letter, "application")}
+                            className="w-full justify-start"
+                          >
+                            <Mail className="w-4 h-4 mr-2" />
+                            {letter.application_email ? "Voir / Modifier" : "Non généré"}
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openEmailEdit(letter, "followup")}
+                            className="w-full justify-start"
+                          >
+                            <MailCheck className="w-4 h-4 mr-2" />
+                            {letter.followup_email ? "Voir / Modifier" : "Non généré"}
+                          </Button>
+                        </TableCell>
                         <TableCell>{new Date(letter.created_at).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => openEmailEdit(letter, "application")}
-                              title="Email de candidature"
-                            >
-                              <Mail className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => openEmailEdit(letter, "followup")}
-                              title="Email de relance"
-                            >
-                              <MailCheck className="w-4 h-4" />
-                            </Button>
                             <Button
                               size="sm"
                               variant="ghost"
