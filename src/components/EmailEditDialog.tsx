@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,7 +18,9 @@ interface EmailEditDialogProps {
   onOpenChange: (open: boolean) => void;
   emailType: "application" | "followup";
   emailContent: string | null;
-  onSave: (content: string) => void;
+  sentDate: string | null;
+  recipient: string;
+  onSave: (content: string, sentDate: string | null, recipient: string) => void;
   companyName: string;
   jobTitle: string;
 }
@@ -26,17 +30,23 @@ export const EmailEditDialog = ({
   onOpenChange,
   emailType,
   emailContent,
+  sentDate,
+  recipient,
   onSave,
   companyName,
   jobTitle,
 }: EmailEditDialogProps) => {
   const { toast } = useToast();
   const [content, setContent] = useState(emailContent || "");
+  const [emailSentDate, setEmailSentDate] = useState(sentDate || "");
+  const [emailRecipient, setEmailRecipient] = useState(recipient);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setContent(emailContent || "");
-  }, [emailContent]);
+    setEmailSentDate(sentDate || "");
+    setEmailRecipient(recipient);
+  }, [emailContent, sentDate, recipient]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(content);
@@ -49,7 +59,7 @@ export const EmailEditDialog = ({
   };
 
   const handleSave = () => {
-    onSave(content);
+    onSave(content, emailSentDate || null, emailRecipient);
     onOpenChange(false);
   };
 
@@ -68,12 +78,41 @@ export const EmailEditDialog = ({
 
         {emailContent ? (
           <div className="space-y-4">
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="min-h-[300px]"
-              placeholder={`Contenu de l'${title.toLowerCase()}`}
-            />
+            <div>
+              <Label htmlFor="email-content">Contenu de l'email</Label>
+              <Textarea
+                id="email-content"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="min-h-[200px] mt-2"
+                placeholder={`Contenu de l'${title.toLowerCase()}`}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="sent-date">Date d'envoi</Label>
+                <Input
+                  id="sent-date"
+                  type="date"
+                  value={emailSentDate}
+                  onChange={(e) => setEmailSentDate(e.target.value)}
+                  className="mt-2"
+                />
+              </div>
+              <div>
+                <Label htmlFor="recipient">Adresse email destinataire</Label>
+                <Input
+                  id="recipient"
+                  type="email"
+                  value={emailRecipient}
+                  onChange={(e) => setEmailRecipient(e.target.value)}
+                  placeholder="exemple@entreprise.com"
+                  className="mt-2"
+                />
+              </div>
+            </div>
+
             <div className="flex justify-between">
               <Button
                 variant="outline"

@@ -109,15 +109,21 @@ const Dashboard = () => {
     setEmailEditOpen(true);
   };
 
-  const saveEmailEdit = async (content: string) => {
+  const saveEmailEdit = async (content: string, sentDate: string | null, recipient: string) => {
     if (!editingEmail) return;
 
-    const field = editingEmail.type === "application" ? "application_email" : "followup_email";
+    const emailField = editingEmail.type === "application" ? "application_email" : "followup_email";
+    const dateField = editingEmail.type === "application" ? "application_email_sent_date" : "followup_email_sent_date";
+    const recipientField = editingEmail.type === "application" ? "application_email_recipient" : "followup_email_recipient";
 
     try {
       const { error } = await supabase
         .from("cover_letters")
-        .update({ [field]: content })
+        .update({ 
+          [emailField]: content,
+          [dateField]: sentDate,
+          [recipientField]: recipient 
+        })
         .eq("id", editingEmail.letter.id);
 
       if (error) throw error;
@@ -249,7 +255,6 @@ const Dashboard = () => {
                       <TableHead>Poste</TableHead>
                       <TableHead>Email de candidature</TableHead>
                       <TableHead>Email de relance</TableHead>
-                      <TableHead>Création</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -319,7 +324,6 @@ const Dashboard = () => {
                             {letter.followup_email ? "Voir / Modifier" : "Non généré"}
                           </Button>
                         </TableCell>
-                        <TableCell>{new Date(letter.created_at).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button
@@ -403,6 +407,16 @@ const Dashboard = () => {
             editingEmail.type === "application"
               ? editingEmail.letter.application_email
               : editingEmail.letter.followup_email
+          }
+          sentDate={
+            editingEmail.type === "application"
+              ? editingEmail.letter.application_email_sent_date
+              : editingEmail.letter.followup_email_sent_date
+          }
+          recipient={
+            editingEmail.type === "application"
+              ? editingEmail.letter.application_email_recipient || ""
+              : editingEmail.letter.followup_email_recipient || ""
           }
           onSave={saveEmailEdit}
           companyName={editingEmail.letter.company_name}

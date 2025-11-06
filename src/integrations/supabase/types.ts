@@ -16,9 +16,15 @@ export type Database = {
     Tables: {
       cover_letters: {
         Row: {
+          application_email: string | null
+          application_email_recipient: string | null
+          application_email_sent_date: string | null
           company_name: string
           created_at: string
           cv_text: string | null
+          followup_email: string | null
+          followup_email_recipient: string | null
+          followup_email_sent_date: string | null
           generated_letter: string | null
           id: string
           job_description: string | null
@@ -28,9 +34,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          application_email?: string | null
+          application_email_recipient?: string | null
+          application_email_sent_date?: string | null
           company_name: string
           created_at?: string
           cv_text?: string | null
+          followup_email?: string | null
+          followup_email_recipient?: string | null
+          followup_email_sent_date?: string | null
           generated_letter?: string | null
           id?: string
           job_description?: string | null
@@ -40,9 +52,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          application_email?: string | null
+          application_email_recipient?: string | null
+          application_email_sent_date?: string | null
           company_name?: string
           created_at?: string
           cv_text?: string | null
+          followup_email?: string | null
+          followup_email_recipient?: string | null
+          followup_email_sent_date?: string | null
           generated_letter?: string | null
           id?: string
           job_description?: string | null
