@@ -399,22 +399,6 @@ const Dashboard = () => {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => copyLetter(letter)}
-                              title="Copier la lettre"
-                            >
-                              <Copy className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => openLetter(letter)}
-                              title="Modifier la lettre"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
                               onClick={() => deleteLetter(letter.id)}
                               title="Supprimer la lettre"
                             >
