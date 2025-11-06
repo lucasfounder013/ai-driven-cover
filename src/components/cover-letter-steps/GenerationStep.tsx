@@ -34,24 +34,25 @@ export const GenerationStep = ({
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // 🔹 Récupère le profil utilisateur dès qu'on a un user
+  const fetchProfile = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("first_name, last_name, phone_number, professional_email, linkedin_url")
+      .eq("id", user.id)
+      .single();
+    if (error) console.error("Error fetching profile:", error);
+    else setProfileData(data);
+  };
+
   // Appel de fetchProfile quand on génère la lettre
   const generateLetter = async () => {
     if (!user) return;
 
     setGenerating(true);
     try {
-      // Récupérer le profil directement ici
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("first_name, last_name, phone_number, professional_email, linkedin_url, desired_position, duration_min, duration_max, available_from")
-        .eq("id", user.id)
-        .single();
-
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-      } else {
-        setProfileData(profile);
-      }
+      await fetchProfile();
 
       // Télécharger le CV
       const { data: cvData, error: downloadError } = await supabase.storage
@@ -70,46 +71,16 @@ export const GenerationStep = ({
           companyName,
           jobDescription,
           cvPdfBase64: base64,
-          profileInfo: profile,
+          profileInfo: profileData,
         },
       });
 
       if (error) throw error;
       setGeneratedLetter(data.generatedLetter);
 
-      // Sauvegarder automatiquement avec les emails générés
-      if (data.applicationEmail && data.followupEmail) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          if (existingLetterId) {
-            await supabase
-              .from("cover_letters")
-              .update({
-                generated_letter: data.generatedLetter,
-                application_email: data.applicationEmail,
-                followup_email: data.followupEmail,
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", existingLetterId);
-          } else {
-            await supabase.from("cover_letters").insert({
-              user_id: session.user.id,
-              job_title: jobTitle,
-              company_name: companyName,
-              job_description: jobDescription,
-              cv_text: cvPath,
-              generated_letter: data.generatedLetter,
-              application_email: data.applicationEmail,
-              followup_email: data.followupEmail,
-              status: "draft",
-            });
-          }
-        }
-      }
-
       toast({
-        title: "Lettre et emails générés",
-        description: "Votre lettre et les emails ont été créés avec succès",
+        title: "Lettre générée",
+        description: "Votre lettre de motivation a été créée avec succès",
       });
     } catch (error: any) {
       console.error("Error generating letter:", error);
@@ -139,17 +110,29 @@ export const GenerationStep = ({
             company_name: companyName,
             job_description: jobDescription,
             generated_letter: generatedLetter,
-            status: "final",
             updated_at: new Date().toISOString(),
           })
           .eq("id", existingLetterId);
 
         if (error) throw error;
+      } else {
+        // Création d'une nouvelle lettre
+        const { error } = await supabase.from("cover_letters").insert({
+          user_id: session.user.id,
+          job_title: jobTitle,
+          company_name: companyName,
+          job_description: jobDescription,
+          cv_text: cvPath,
+          generated_letter: generatedLetter,
+          status: "final",
+        });
+
+        if (error) throw error;
       }
 
       toast({
-        title: "Lettre finalisée",
-        description: "Votre lettre a été marquée comme finale",
+        title: "Lettre sauvegardée",
+        description: "Votre lettre a été enregistrée avec succès",
       });
       onReset();
     } catch (error: any) {

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, Trash2, Pencil, Copy, Edit2, Mail, MailWarning } from "lucide-react";
+import { FileText, Plus, Trash2, Pencil, Copy, Edit2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CoverLetterForm } from "@/components/CoverLetterForm";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,8 +28,6 @@ const Dashboard = () => {
   const [editingLetter, setEditingLetter] = useState<any>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingField, setEditingField] = useState<{ id: string; field: 'company_name' | 'job_title'; value: string } | null>(null);
-  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
-  const [viewingEmail, setViewingEmail] = useState<{ type: 'application' | 'followup'; content: string } | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -114,45 +112,28 @@ const Dashboard = () => {
 
   const saveFieldEdit = async () => {
     if (!editingField) return;
-    
+
     try {
       const { error } = await supabase
         .from('cover_letters')
-        .update({ 
-          [editingField.field]: editingField.value,
-          updated_at: new Date().toISOString()
-        })
+        .update({ [editingField.field]: editingField.value })
         .eq('id', editingField.id);
 
       if (error) throw error;
 
       toast({
-        title: "Modification enregistrée",
-        description: "Le champ a été mis à jour avec succès",
+        title: "Modifié",
+        description: "La modification a été enregistrée",
       });
 
+      fetchLetters();
       setEditDialogOpen(false);
       setEditingField(null);
-      fetchLetters();
     } catch (error: any) {
       console.error('Error updating field:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de modifier le champ",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const openEmailDialog = (letter: any, type: 'application' | 'followup') => {
-    const content = type === 'application' ? letter.application_email : letter.followup_email;
-    if (content) {
-      setViewingEmail({ type, content });
-      setEmailDialogOpen(true);
-    } else {
-      toast({
-        title: "Email non disponible",
-        description: "Cet email n'a pas encore été généré",
+        description: "Impossible de modifier",
         variant: "destructive",
       });
     }
@@ -229,7 +210,6 @@ const Dashboard = () => {
                     <TableRow>
                       <TableHead>Nom de l'entreprise</TableHead>
                       <TableHead>Poste</TableHead>
-                      <TableHead>Emails</TableHead>
                       <TableHead>Création</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -275,30 +255,6 @@ const Dashboard = () => {
                               className="h-6 w-6 p-0"
                             >
                               <Edit2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => openEmailDialog(letter, 'application')}
-                              title="Mail de candidature"
-                              className="h-8 w-8 p-0"
-                              disabled={!letter.application_email}
-                            >
-                              <Mail className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => openEmailDialog(letter, 'followup')}
-                              title="Mail de relance"
-                              className="h-8 w-8 p-0"
-                              disabled={!letter.followup_email}
-                            >
-                              <MailWarning className="w-4 h-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -372,49 +328,6 @@ const Dashboard = () => {
             </Button>
             <Button onClick={saveFieldEdit}>
               Enregistrer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {viewingEmail?.type === 'application' ? (
-                <>
-                  <Mail className="w-5 h-5" />
-                  Mail de candidature
-                </>
-              ) : (
-                <>
-                  <MailWarning className="w-5 h-5" />
-                  Mail de relance
-                </>
-              )}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="whitespace-pre-wrap bg-muted p-4 rounded-lg max-h-[60vh] overflow-y-auto">
-            {viewingEmail?.content}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (viewingEmail?.content) {
-                  navigator.clipboard.writeText(viewingEmail.content);
-                  toast({
-                    title: "Email copié",
-                    description: "L'email a été copié dans le presse-papiers",
-                  });
-                }
-              }}
-            >
-              <Copy className="w-4 h-4 mr-2" />
-              Copier
-            </Button>
-            <Button onClick={() => setEmailDialogOpen(false)}>
-              Fermer
             </Button>
           </DialogFooter>
         </DialogContent>
