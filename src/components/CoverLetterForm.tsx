@@ -43,20 +43,6 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const resetForm = () => {
-    if (onBack) onBack();
-    else {
-      setCurrentStep(1);
-      setCvFile(null);
-      setCvPath("");
-      setJobTitle("");
-      setCompanyName("");
-      setJobDescription("");
-      setGeneratedLetter("");
-      window.location.reload();
-    }
-  };
-
   return (
     <Card className="p-8">
       {onBack && (
@@ -66,9 +52,9 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
         </Button>
       )}
 
-      {/* ✅ STEPPER CENTRÉ SANS BARRES */}
-      <div className="mb-10 flex justify-center">
-        <div className="flex items-center gap-16">
+      {/* ✅ STEPPER CENTRÉ & ÉTALÉ */}
+      <div className="mb-10 w-full max-w-4xl mx-auto">
+        <div className="flex justify-between items-center w-full">
           {[1, 2, 3].map((step) => (
             <div key={step} className="flex flex-col items-center">
               <div
@@ -113,8 +99,6 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
               jobDescription={jobDescription}
               generatedLetter={generatedLetter}
               setGeneratedLetter={setGeneratedLetter}
-              onReset={resetForm}
-              existingLetterId={editingLetter?.id}
             />
           )}
         </div>
