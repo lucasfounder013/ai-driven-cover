@@ -310,7 +310,7 @@ const Dashboard = () => {
                       <TableHead>Email de candidature</TableHead>
                       <TableHead>Email de relance</TableHead>
                       <TableHead>Réponse</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="text-right"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
