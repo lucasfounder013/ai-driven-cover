@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { jobTitle, companyName, jobDescription, cvPdfBase64, profileInfo, additionalInfo } = await req.json();
+    const { jobTitle, companyName, jobDescription, cvPdfBase64, profileInfo } = await req.json();
     
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     if (!ANTHROPIC_API_KEY) {
@@ -85,7 +85,6 @@ RÈGLES CRITIQUES :
 Poste : ${jobTitle}
 Entreprise : ${companyName}
 ${jobDescription ? `Description du poste : ${jobDescription}` : ''}
-${additionalInfo ? `\nInformations complémentaires du candidat à IMPÉRATIVEMENT intégrer dans la lettre :\n${additionalInfo}` : ''}
 
 IMPORTANT : Voici l'en-tête qui sera ajouté automatiquement (NE LE RÉPÈTE PAS dans ta réponse) :
 ${headerText}
@@ -95,15 +94,14 @@ Instructions CRITIQUES :
 2. Commence DIRECTEMENT par "Madame, Monsieur," (ou l'équivalent approprié)
 3. N'inclus PAS le nom du candidat, ni ses coordonnées, ni le titre du poste au début de ta réponse
 4. Lis attentivement le CV pour identifier les compétences, expériences et formations pertinentes
-5. ${additionalInfo ? 'IMPORTANT : Intègre IMPÉRATIVEMENT les informations complémentaires fournies par le candidat de manière naturelle dans la lettre' : ''}
-6. Structure le corps de la lettre avec :
+5. Structure le corps de la lettre avec :
    - Salutation : "Madame, Monsieur,"
    - Introduction mentionnant le poste et l'entreprise
    - Corps qui met en valeur les expériences et compétences RÉELLES du candidat
    - Conclusion professionnelle avec formule de politesse
-7. Utilise UNIQUEMENT les informations du CV ${additionalInfo ? 'et les informations complémentaires fournies' : ''} - n'invente rien
-8. Sois concis et percutant (environ 300-400 mots)
-9. Ton professionnel et formel
+6. Utilise UNIQUEMENT les informations du CV - n'invente rien
+7. Sois concis et percutant (environ 300-400 mots)
+8. Ton professionnel et formel
 
 Rappel : L'en-tête avec le nom, coordonnées et titre est déjà présent, commence directement par la salutation.`;
 
@@ -158,24 +156,14 @@ Rappel : L'en-tête avec le nom, coordonnées et titre est déjà présent, comm
 
     // Générer le mail de candidature
     console.log('Generating application email with Claude...');
-    
-    const candidateName = profileInfo ? `${profileInfo.firstName || ''} ${profileInfo.lastName || ''}`.trim().toUpperCase() : '[Votre prénom NOM]';
-    const candidatePhone = profileInfo?.phoneNumber || '[Votre téléphone]';
-    const candidateEmail = profileInfo?.professionalEmail || '[Votre email]';
-    
     const applicationEmailPrompt = `En te basant sur les informations suivantes, génère un email professionnel et concis pour postuler au poste de ${jobTitle} chez ${companyName}.
-
-Informations du candidat :
-- Nom complet : ${candidateName}
-- Téléphone : ${candidatePhone}
-- Email : ${candidateEmail}
 
 Instructions :
 - Commence par "Objet : Candidature pour le poste de ${jobTitle}"
 - Email court (5-8 lignes maximum)
 - Ton professionnel et enthousiaste
 - Mentionne que le CV et la lettre de motivation sont en pièce jointe
-- Inclus OBLIGATOIREMENT la signature avec le nom complet, téléphone et email du candidat
+- Utilise les informations du profil pour personnaliser : ${profileInfo ? `${profileInfo.firstName} ${profileInfo.lastName}` : 'le candidat'}
 - Termine par une formule de politesse`;
 
     const emailResponse = await fetch('https://api.anthropic.com/v1/messages', {
@@ -201,18 +189,12 @@ Instructions :
     console.log('Generating follow-up email with Claude...');
     const followupEmailPrompt = `Génère un email de relance professionnel pour le poste de ${jobTitle} chez ${companyName}, à envoyer 7-10 jours après la candidature initiale.
 
-Informations du candidat :
-- Nom complet : ${candidateName}
-- Téléphone : ${candidatePhone}
-- Email : ${candidateEmail}
-
 Instructions :
 - Commence par "Objet : Relance - Candidature ${jobTitle}"
 - Email court et poli (5-7 lignes)
 - Rappelle brièvement la candidature
 - Exprime l'intérêt toujours présent pour le poste
 - Demande des nouvelles du processus de recrutement
-- Inclus OBLIGATOIREMENT la signature avec le nom complet, téléphone et email du candidat
 - Ton courtois et professionnel, sans être insistant`;
 
     const followupResponse = await fetch('https://api.anthropic.com/v1/messages', {
