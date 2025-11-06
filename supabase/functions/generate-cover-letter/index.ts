@@ -142,10 +142,10 @@ Règles :
 
     // Générer l'email de candidature
     console.log("Generating application email...");
-    const applicationEmailPrompt = `Rédige un email professionnel en français pour postuler au poste de "${jobTitle}" chez ${companyName}.
+    const applicationEmailPrompt = `Rédige un email professionnel très court et concis en français pour postuler au poste de "${jobTitle}" chez ${companyName}.
 
 L'email doit :
-- Être concis (150-200 mots maximum)
+- Être très court (80-100 mots maximum)
 - Avoir un objet d'email accrocheur
 - Mentionner la lettre de motivation et le CV en pièces jointes
 - Être formel et professionnel
@@ -179,10 +179,10 @@ Objet: [objet de l'email]
 
     // Générer l'email de relance
     console.log("Generating followup email...");
-    const followupEmailPrompt = `Rédige un email de relance professionnel en français pour le poste de "${jobTitle}" chez ${companyName}.
+    const followupEmailPrompt = `Rédige un email de relance professionnel très court et concis en français pour le poste de "${jobTitle}" chez ${companyName}.
 
 L'email doit :
-- Être concis (100-150 mots maximum)
+- Être très court (60-80 mots maximum)
 - Rappeler poliment la candidature
 - Montrer l'intérêt continu pour le poste
 - Être courtois et professionnel
