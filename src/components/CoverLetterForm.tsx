@@ -20,7 +20,6 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
   const [jobDescription, setJobDescription] = useState("");
   const [generatedLetter, setGeneratedLetter] = useState("");
 
-  // Auto-remplissage lors de l’édition
   useEffect(() => {
     if (editingLetter) {
       setJobTitle(editingLetter.job_title || "");
@@ -45,9 +44,8 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
   };
 
   const resetForm = () => {
-    if (onBack) {
-      onBack();
-    } else {
+    if (onBack) onBack();
+    else {
       setCurrentStep(1);
       setCvFile(null);
       setCvPath("");
@@ -61,7 +59,6 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
 
   return (
     <Card className="p-8">
-      {/* BOUTON RETOUR */}
       {onBack && (
         <Button variant="outline" onClick={onBack} className="mb-6">
           <ChevronLeft className="w-4 h-4 mr-2" />
@@ -69,68 +66,60 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
         </Button>
       )}
 
-      {/* ✅ STEPPER CENTRÉ ET ALIGNÉ */}
-      <div className="mb-8">
-        <div className="flex justify-center items-center gap-12">
+      {/* ✅ STEPPER CENTRÉ SANS BARRES */}
+      <div className="mb-10 flex justify-center">
+        <div className="flex items-center gap-16">
           {[1, 2, 3].map((step) => (
             <div key={step} className="flex flex-col items-center">
-              {/* CERCLES NUMÉROTÉS */}
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold mb-2 ${
+                className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold mb-2 ${
                   currentStep >= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                 }`}
               >
                 {step}
               </div>
 
-              {/* LABELS */}
               <span className="text-sm text-muted-foreground text-center">
                 {step === 1 && "Télécharger le CV"}
                 {step === 2 && "Détails du poste"}
                 {step === 3 && "Génération"}
               </span>
-
-              {/* ✅ BARRE ALIGNÉE POUR TOUS (transparente pour le 3) */}
-              <div
-                className={`h-1 w-12 mt-4 ${
-                  step < 3 ? (currentStep > step ? "bg-primary" : "bg-muted") : "bg-transparent" // ⭐ règle le souci d’alignement
-                }`}
-              />
             </div>
           ))}
         </div>
       </div>
 
-      {/* ✅ CONTENUS PAR ÉTAPE */}
-      <div className="min-h-[400px]">
-        {currentStep === 1 && <CVUploadStep cvFile={cvFile} setCvFile={setCvFile} setCvPath={setCvPath} />}
+      {/* ✅ CONTENU CENTRÉ */}
+      <div className="min-h-[400px] flex justify-center">
+        <div className="w-full max-w-2xl">
+          {currentStep === 1 && <CVUploadStep cvFile={cvFile} setCvFile={setCvFile} setCvPath={setCvPath} />}
 
-        {currentStep === 2 && (
-          <JobDetailsStep
-            jobTitle={jobTitle}
-            setJobTitle={setJobTitle}
-            companyName={companyName}
-            setCompanyName={setCompanyName}
-            jobDescription={jobDescription}
-            setJobDescription={setJobDescription}
-          />
-        )}
+          {currentStep === 2 && (
+            <JobDetailsStep
+              jobTitle={jobTitle}
+              setJobTitle={setJobTitle}
+              companyName={companyName}
+              setCompanyName={setCompanyName}
+              jobDescription={jobDescription}
+              setJobDescription={setJobDescription}
+            />
+          )}
 
-        {currentStep === 3 && (
-          <GenerationStep
-            cvPath={cvPath}
-            jobTitle={jobTitle}
-            companyName={companyName}
-            jobDescription={jobDescription}
-            generatedLetter={generatedLetter}
-            setGeneratedLetter={setGeneratedLetter}
-            onReset={resetForm}
-            existingLetterId={editingLetter?.id}
-          />
-        )}
+          {currentStep === 3 && (
+            <GenerationStep
+              cvPath={cvPath}
+              jobTitle={jobTitle}
+              companyName={companyName}
+              jobDescription={jobDescription}
+              generatedLetter={generatedLetter}
+              setGeneratedLetter={setGeneratedLetter}
+              onReset={resetForm}
+              existingLetterId={editingLetter?.id}
+            />
+          )}
+        </div>
       </div>
 
-      {/* ✅ NAVIGATION */}
       {currentStep < 3 && (
         <div className="flex justify-between mt-8">
           <Button variant="outline" onClick={handleBack} disabled={currentStep === 1}>
