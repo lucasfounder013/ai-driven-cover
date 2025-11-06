@@ -20,7 +20,7 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
   const [jobDescription, setJobDescription] = useState("");
   const [generatedLetter, setGeneratedLetter] = useState("");
 
-  // Pré-remplir le formulaire si on édite une lettre existante
+  // Pré-remplir lorsqu’on édite une lettre
   useEffect(() => {
     if (editingLetter) {
       setJobTitle(editingLetter.job_title || "");
@@ -28,7 +28,7 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
       setJobDescription(editingLetter.job_description || "");
       setCvPath(editingLetter.cv_text || "");
       setGeneratedLetter(editingLetter.generated_letter || "");
-      setCurrentStep(3); // Aller directement à l'étape de génération
+      setCurrentStep(3);
     }
   }, [editingLetter]);
 
@@ -36,17 +36,12 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
   const canProceedToStep3 = jobTitle.trim() !== "" && companyName.trim() !== "";
 
   const handleNext = () => {
-    if (currentStep === 1 && canProceedToStep2) {
-      setCurrentStep(2);
-    } else if (currentStep === 2 && canProceedToStep3) {
-      setCurrentStep(3);
-    }
+    if (currentStep === 1 && canProceedToStep2) setCurrentStep(2);
+    else if (currentStep === 2 && canProceedToStep3) setCurrentStep(3);
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
   const resetForm = () => {
@@ -67,57 +62,42 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
   return (
     <Card className="p-8">
       {onBack && (
-        <Button
-          variant="outline"
-          onClick={onBack}
-          className="mb-6"
-        >
+        <Button variant="outline" onClick={onBack} className="mb-6">
           <ChevronLeft className="w-4 h-4 mr-2" />
           Retour
         </Button>
       )}
-      
+
+      {/* ✅ STEPPER CENTRÉ */}
       <div className="mb-8">
-        <div className="flex items-center mb-4">
+        <div className="flex justify-center items-center gap-12 mb-4">
           {[1, 2, 3].map((step) => (
-            <div key={step} className="flex items-center flex-1">
-              <div className="flex flex-col items-center flex-1">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold mb-2 ${
-                    currentStep >= step
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {step}
-                </div>
-                <span className="text-sm text-muted-foreground text-center">
-                  {step === 1 && "Télécharger le CV"}
-                  {step === 2 && "Détails du poste"}
-                  {step === 3 && "Génération"}
-                </span>
+            <div key={step} className="flex flex-col items-center">
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold mb-2 ${
+                  currentStep >= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {step}
               </div>
-              {step < 3 && (
-                <div
-                  className={`h-1 w-full ${
-                    currentStep > step ? "bg-primary" : "bg-muted"
-                  }`}
-                  style={{ marginTop: "-20px" }}
-                />
-              )}
+
+              <span className="text-sm text-muted-foreground text-center">
+                {step === 1 && "Télécharger le CV"}
+                {step === 2 && "Détails du poste"}
+                {step === 3 && "Génération"}
+              </span>
+
+              {/* ✅ Ligne entre les étapes */}
+              {step < 3 && <div className={`h-1 w-12 mt-4 ${currentStep > step ? "bg-primary" : "bg-muted"}`} />}
             </div>
           ))}
         </div>
       </div>
 
+      {/* ✅ CONTENU DES ÉTAPES */}
       <div className="min-h-[400px]">
-        {currentStep === 1 && (
-          <CVUploadStep 
-            cvFile={cvFile} 
-            setCvFile={setCvFile}
-            setCvPath={setCvPath}
-          />
-        )}
+        {currentStep === 1 && <CVUploadStep cvFile={cvFile} setCvFile={setCvFile} setCvPath={setCvPath} />}
+
         {currentStep === 2 && (
           <JobDetailsStep
             jobTitle={jobTitle}
@@ -128,6 +108,7 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
             setJobDescription={setJobDescription}
           />
         )}
+
         {currentStep === 3 && (
           <GenerationStep
             cvPath={cvPath}
@@ -142,22 +123,17 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
         )}
       </div>
 
+      {/* ✅ BOUTONS SUIVANT / RETOUR */}
       {currentStep < 3 && (
         <div className="flex justify-between mt-8">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={currentStep === 1}
-          >
+          <Button variant="outline" onClick={handleBack} disabled={currentStep === 1}>
             <ChevronLeft className="w-4 h-4 mr-2" />
             Retour
           </Button>
+
           <Button
             onClick={handleNext}
-            disabled={
-              (currentStep === 1 && !canProceedToStep2) ||
-              (currentStep === 2 && !canProceedToStep3)
-            }
+            disabled={(currentStep === 1 && !canProceedToStep2) || (currentStep === 2 && !canProceedToStep3)}
           >
             Suivant
             <ChevronRight className="w-4 h-4 ml-2" />
