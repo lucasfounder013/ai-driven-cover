@@ -142,6 +142,10 @@ Règles :
 
     // Générer l'email de candidature
     console.log("Generating application email...");
+    const firstName = profileInfo?.firstName ?? profileInfo?.first_name ?? "";
+    const lastName = profileInfo?.lastName ?? profileInfo?.last_name ?? "";
+    const fullName = `${firstName} ${lastName}`.trim();
+    
     const applicationEmailPrompt = `Rédige un email professionnel très court et concis en français pour postuler au poste de "${jobTitle}" chez ${companyName}.
 
 L'email doit :
@@ -150,6 +154,7 @@ L'email doit :
 - Mentionner la lettre de motivation et le CV en pièces jointes
 - Être formel et professionnel
 - Exprimer l'enthousiasme pour le poste
+- Se terminer par "Cordialement," suivi du nom complet du candidat : ${fullName}
 
 Format de réponse :
 Objet: [objet de l'email]
@@ -187,6 +192,7 @@ L'email doit :
 - Montrer l'intérêt continu pour le poste
 - Être courtois et professionnel
 - Demander un retour sur la candidature
+- Se terminer par "Cordialement," suivi du nom complet du candidat : ${fullName}
 
 Format de réponse :
 Objet: [objet de l'email]
