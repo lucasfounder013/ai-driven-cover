@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Download, Sparkles, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { LetterPreview } from "./LetterPreview";
 
 interface GenerationStepProps {
   cvPath: string;
@@ -40,34 +40,28 @@ export const GenerationStep = ({
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // 🧠 Génération automatique via Supabase Edge Function
   const generateLetter = async () => {
     if (!user) return;
 
     setGenerating(true);
     try {
-      // Récupérer le profil directement
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("first_name, last_name, phone_number, professional_email, linkedin_url, desired_position, duration_min, duration_max, available_from")
+        .select(
+          "first_name, last_name, phone_number, professional_email, linkedin_url, desired_position, duration_min, duration_max, available_from",
+        )
         .eq("id", user.id)
         .single();
 
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-      } else {
-        setProfileData(profile);
-      }
+      if (profileError) throw profileError;
+      setProfileData(profile);
 
-      // Télécharger le CV
-      const { data: cvData, error: downloadError } = await supabase.storage
-        .from("cvs")
-        .download(cvPath);
+      const { data: cvData, error: downloadError } = await supabase.storage.from("cvs").download(cvPath);
       if (downloadError) throw downloadError;
 
       const arrayBuffer = await cvData.arrayBuffer();
-      const base64 = btoa(
-        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), "")
-      );
+      const base64 = btoa(new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ""));
 
       const { data, error } = await supabase.functions.invoke("generate-cover-letter", {
         body: {
@@ -80,6 +74,7 @@ export const GenerationStep = ({
       });
 
       if (error) throw error;
+
       setGeneratedLetter(data.generatedLetter);
       setEmails({
         applicationEmail: data.applicationEmail || "",
@@ -102,15 +97,17 @@ export const GenerationStep = ({
     }
   };
 
+  // 💾 Sauvegarde dans Supabase
   const saveLetter = async () => {
     if (!user) return;
     setSaving(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) throw new Error("Session invalide");
 
       if (existingLetterId) {
-        // Mise à jour de la lettre existante
         const { error } = await supabase
           .from("cover_letters")
           .update({
@@ -126,7 +123,6 @@ export const GenerationStep = ({
 
         if (error) throw error;
       } else {
-        // Création d'une nouvelle lettre
         const { error } = await supabase.from("cover_letters").insert({
           user_id: session.user.id,
           job_title: jobTitle,
@@ -159,78 +155,56 @@ export const GenerationStep = ({
     }
   };
 
-  // 🧩 Génération du PDF avec en-tête dynamique
+  // 📄 Téléchargement PDF (identique à la preview)
   const downloadLetter = async () => {
     try {
       const { jsPDF } = await import("jspdf");
       const doc = new jsPDF({ unit: "mm", format: "a4" });
 
       const leftMargin = 20;
-      const rightMargin = 20;
       const topMargin = 25;
       const bottomMargin = 25;
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      const maxWidth = pageWidth - leftMargin - rightMargin;
+      const maxWidth = pageWidth - 2 * leftMargin;
 
-      // Données du profil dynamique
-      const name = profileData
-        ? `${profileData.first_name?.toUpperCase() || ""} ${profileData.last_name?.toUpperCase() || ""}`
-        : "NOM PRÉNOM";
-
+      const name = `${profileData?.first_name?.toUpperCase() || "NOM"} ${profileData?.last_name?.toUpperCase() || "PRÉNOM"}`;
       const subtitle = "Stage de 6 mois à partir de Février 2026";
-
-      const contact = [
-        profileData?.phone_number || "",
-        profileData?.professional_email || "",
-        profileData?.linkedin_url || "",
-      ]
+      const contact = [profileData?.phone_number, profileData?.professional_email, profileData?.linkedin_url]
         .filter(Boolean)
-        .join("  •  ");
-
+        .join(" • ");
       const title = `Stage – ${jobTitle} (${companyName})`;
 
-      // --- EN-TÊTE ---
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(90, 90, 90);
-      doc.text(contact, pageWidth / 2, topMargin, { align: "center" });
+      doc.setFont("Times", "Roman");
+      doc.setFontSize(11);
 
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(18);
-      doc.setTextColor(0, 0, 0);
-      doc.text(name, pageWidth / 2, topMargin + 10, { align: "center" });
-
-      doc.setFont("Helvetica", "normal");
+      let y = topMargin;
+      doc.text(contact, pageWidth / 2, y, { align: "center" });
+      y += 8;
+      doc.setFont("Times", "Bold");
+      doc.setFontSize(16);
+      doc.text(name, pageWidth / 2, y, { align: "center" });
+      y += 8;
+      doc.setFont("Times", "Italic");
       doc.setFontSize(12);
-      doc.setTextColor(100, 100, 100);
-      doc.text(subtitle, pageWidth / 2, topMargin + 17, { align: "center" });
-
-      doc.setDrawColor(0);
-      doc.line(leftMargin, topMargin + 22, pageWidth - leftMargin, topMargin + 22);
-
-      doc.setFont("Helvetica", "bold");
+      doc.text(subtitle, pageWidth / 2, y, { align: "center" });
+      y += 10;
+      doc.line(leftMargin, y, pageWidth - leftMargin, y);
+      y += 8;
+      doc.setFont("Times", "Bold");
       doc.setFontSize(13);
-      doc.setTextColor(0, 0, 0);
-      doc.text(title, pageWidth / 2, topMargin + 32, { align: "center" });
-
-      doc.setLineWidth(0.3);
-      doc.line(leftMargin, topMargin + 34, pageWidth - leftMargin, topMargin + 34);
-
-      // --- TEXTE DE LA LETTRE ---
+      doc.text(title, pageWidth / 2, y, { align: "center" });
+      y += 10;
       doc.setFont("Times", "Roman");
       doc.setFontSize(12);
-      doc.setTextColor(20, 20, 20);
 
       const lines = doc.splitTextToSize(generatedLetter, maxWidth);
-      let y = topMargin + 44;
-
       lines.forEach((line: string) => {
         if (y > pageHeight - bottomMargin) {
           doc.addPage();
           y = topMargin;
         }
-        doc.text(line, leftMargin, y, { maxWidth });
+        doc.text(line, leftMargin, y);
         y += 6;
       });
 
@@ -238,7 +212,7 @@ export const GenerationStep = ({
 
       toast({
         title: "Téléchargement réussi",
-        description: "Votre lettre a été téléchargée avec l'en-tête personnalisé",
+        description: "Votre lettre a été téléchargée avec la mise en page correspondante",
       });
     } catch (error) {
       console.error("Error downloading PDF:", error);
@@ -250,6 +224,7 @@ export const GenerationStep = ({
     }
   };
 
+  // 📋 Copie du texte
   const copyLetter = () => {
     navigator.clipboard
       .writeText(generatedLetter)
@@ -257,7 +232,7 @@ export const GenerationStep = ({
         setCopied(true);
         toast({
           title: "Lettre copiée",
-          description: "La lettre a été copiée dans le presse-papier",
+          description: "Le texte a été copié dans le presse-papier",
         });
         setTimeout(() => setCopied(false), 2000);
       })
@@ -271,16 +246,13 @@ export const GenerationStep = ({
       });
   };
 
+  // 🔄 ÉTATS VISUELS
   if (generating) {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
         <Loader2 className="w-16 h-16 text-primary animate-spin" />
-        <h3 className="text-xl font-semibold text-foreground">
-          Génération en cours...
-        </h3>
-        <p className="text-muted-foreground">
-          Rédaction de votre lettre en cours
-        </p>
+        <h3 className="text-xl font-semibold text-foreground">Génération en cours...</h3>
+        <p className="text-muted-foreground">Rédaction de votre lettre en cours</p>
       </div>
     );
   }
@@ -290,12 +262,8 @@ export const GenerationStep = ({
       <div className="flex flex-col items-center justify-center py-16 space-y-6">
         <Sparkles className="w-20 h-20 text-primary" />
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-foreground">
-            Prêt à générer votre lettre de motivation
-          </h2>
-          <p className="text-muted-foreground">
-            Cliquez sur le bouton ci-dessous pour lancer la génération
-          </p>
+          <h2 className="text-2xl font-bold text-foreground">Prêt à générer votre lettre de motivation</h2>
+          <p className="text-muted-foreground">Cliquez sur le bouton ci-dessous pour lancer la génération</p>
         </div>
         <Button onClick={generateLetter} size="lg" className="mt-4">
           <Sparkles className="w-5 h-5 mr-2" />
@@ -305,46 +273,41 @@ export const GenerationStep = ({
     );
   }
 
+  // 🧾 RENDU FINAL
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          Votre lettre de motivation
-        </h2>
-        <p className="text-muted-foreground">
-          Vous pouvez modifier le texte avant de l'enregistrer
-        </p>
+        <h2 className="text-2xl font-bold mb-2 text-foreground">Votre lettre de motivation</h2>
+        <p className="text-muted-foreground">Cliquez sur le texte ci-dessous pour le modifier directement</p>
       </div>
 
-      <Textarea
-        value={generatedLetter}
-        onChange={(e) => setGeneratedLetter(e.target.value)}
-        className="min-h-[400px] font-serif"
+      <LetterPreview
+        profileData={profileData}
+        jobTitle={jobTitle}
+        companyName={companyName}
+        generatedLetter={generatedLetter}
+        setGeneratedLetter={setGeneratedLetter}
       />
 
       <div className="flex flex-wrap gap-3 justify-center">
         <Button onClick={copyLetter} variant="outline">
           {copied ? (
             <>
-              <Check className="w-4 h-4 mr-2" />
-              Copié
+              <Check className="w-4 h-4 mr-2" /> Copié
             </>
           ) : (
             <>
-              <Copy className="w-4 h-4 mr-2" />
-              Copier
+              <Copy className="w-4 h-4 mr-2" /> Copier
             </>
           )}
         </Button>
         <Button onClick={downloadLetter} variant="outline">
-          <Download className="w-4 h-4 mr-2" />
-          Télécharger
+          <Download className="w-4 h-4 mr-2" /> Télécharger
         </Button>
         <Button onClick={saveLetter} disabled={saving}>
           {saving ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Sauvegarde...
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sauvegarde...
             </>
           ) : (
             "Sauvegarder"
