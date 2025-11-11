@@ -69,11 +69,6 @@ export const useAuth = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Connexion réussie !",
-        description: "Bienvenue sur Job Boost",
-      });
-
       return { data, error: null };
     } catch (error: any) {
       console.error('Sign in error:', error);

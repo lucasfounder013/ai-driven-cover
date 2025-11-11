@@ -43,6 +43,16 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
+  const handleReset = () => {
+    setCvFile(null);
+    setCvPath("");
+    setJobTitle("");
+    setCompanyName("");
+    setJobDescription("");
+    setGeneratedLetter("");
+    setCurrentStep(1);
+  };
+
   return (
     <Card className="p-8">
       {onBack && (
@@ -99,6 +109,7 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
               jobDescription={jobDescription}
               generatedLetter={generatedLetter}
               setGeneratedLetter={setGeneratedLetter}
+              onReset={handleReset}
             />
           )}
         </div>
