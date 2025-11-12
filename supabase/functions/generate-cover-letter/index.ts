@@ -51,18 +51,17 @@ RÈGLES :
 
     // === PROMPT PRINCIPAL ===
     const textPrompt = `
-Rédige le corps complet d'une lettre de motivation professionnelle pour un poste.
+Rédige UNIQUEMENT le corps d'une lettre de motivation professionnelle pour un poste.
 
 Contexte :
 - Poste : ${jobTitle}
 - Entreprise : ${companyName}
 ${jobDescription ? `- Description de l'offre : ${jobDescription}` : ""}
-- Les informations personnelles du candidat (nom, téléphone, email, etc.) sont déjà ajoutées ailleurs dans l'application.
 
 Règles STRICTES :
 1️⃣ Commence directement par "Madame, Monsieur,".
-2️⃣ N'ajoute AUCUNE information d'en-tête (nom, contact, titre, entreprise, etc.).
-3️⃣ Ne signe PAS la lettre (pas de "Cordialement" ni de nom).
+2️⃣ N'ajoute AUCUNE information d'en-tête : NI le nom du candidat, NI ses coordonnées, NI le titre du poste, NI le nom de l'entreprise en haut de la lettre.
+3️⃣ Ne signe PAS la lettre (pas de "Cordialement" ni de nom à la fin).
 4️⃣ Écris un texte fluide, clair et professionnel.
 5️⃣ Longueur recommandée : entre 300 et 400 mots.
 6️⃣ Sois cohérent avec les expériences et la formation visibles dans le CV fourni.
