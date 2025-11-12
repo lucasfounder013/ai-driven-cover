@@ -26,12 +26,14 @@ serve(async (req) => {
     const systemPrompt = `
 Tu es un expert en rédaction de lettres de motivation professionnelles en français.
 Tu écris des lettres naturelles, fluides, personnalisées, et sans répétition inutile.
-RÈGLES :
-- Utilise UNIQUEMENT les informations du CV fourni
-- N'invente AUCUNE compétence
+RÈGLES ABSOLUES :
+- Utilise UNIQUEMENT et EXCLUSIVEMENT les informations du CV fourni
+- N'INVENTE AUCUNE information : ni expérience, ni compétence, ni formation, ni projet
+- Si une information n'est pas dans le CV, ne la mentionne PAS
 - Sois factuel, précis, fluide et professionnel
 - Ne parle jamais de toi à la première personne (tu écris au nom du candidat)
-- N'inclus JAMAIS le nom, email, téléphone ou coordonnées du candidat
+- N'inclus JAMAIS le nom, email, téléphone ou coordonnées du candidat dans l'en-tête
+- TOUJOURS terminer la lettre par une formule de politesse professionnelle
 `;
 
     // === Préparation du contenu envoyé à Claude ===
@@ -61,10 +63,10 @@ ${jobDescription ? `- Description de l'offre : ${jobDescription}` : ""}
 Règles STRICTES :
 1️⃣ Commence directement par "Madame, Monsieur,".
 2️⃣ N'ajoute AUCUNE information d'en-tête : NI le nom du candidat, NI ses coordonnées, NI le titre du poste, NI le nom de l'entreprise en haut de la lettre.
-3️⃣ Ne signe PAS la lettre (pas de "Cordialement" ni de nom à la fin).
-4️⃣ Écris un texte fluide, clair et professionnel.
-5️⃣ Longueur OBLIGATOIRE : entre 210 et 250 mots maximum.
-6️⃣ Sois cohérent avec les expériences et la formation visibles dans le CV fourni.
+3️⃣ Termine OBLIGATOIREMENT par une formule de politesse professionnelle (ex: "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées." ou "Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, mes salutations respectueuses.").
+4️⃣ N'INVENTE AUCUNE information : utilise UNIQUEMENT ce qui est dans le CV fourni.
+5️⃣ Écris un texte fluide, clair et professionnel.
+6️⃣ Longueur OBLIGATOIRE : entre 210 et 250 mots maximum.
 7️⃣ Sois synthétique tout en restant professionnel et précis.
 
 Structure OBLIGATOIRE (3 paragraphes maximum) :
