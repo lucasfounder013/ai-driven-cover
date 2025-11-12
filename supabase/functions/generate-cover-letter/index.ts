@@ -12,6 +12,7 @@ serve(async (req) => {
   }
 
   try {
+    // 🔹 Récupération des données envoyées par le frontend
     const { jobTitle, companyName, jobDescription, cvPdfBase64, profileInfo } = await req.json();
 
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
@@ -19,18 +20,24 @@ serve(async (req) => {
       throw new Error("ANTHROPIC_API_KEY is not configured");
     }
 
-    console.log("Generating cover letter...");
+    console.log("🧠 Generating cover letter for:", jobTitle, "at", companyName);
 
-    const systemPrompt = `Tu es un expert en rédaction de lettres de motivation professionnelles en français.
-Tu dois créer des lettres personnalisées et structurées.
+    // === SYSTEM PROMPT ===
+    const systemPrompt = `
+Tu es un expert en rédaction de lettres de motivation professionnelles en français.
+Tu écris des lettres naturelles, fluides, personnalisées, et sans répétition inutile.
 RÈGLES :
 - Utilise UNIQUEMENT les informations du CV fourni
 - N'invente AUCUNE compétence
-- Si une info manque, n'en parle pas
-- Sois factuel, précis, fluide et professionnel.`;
+- Sois factuel, précis, fluide et professionnel
+- Ne parle jamais de toi à la première personne (tu écris au nom du candidat)
+- N'inclus JAMAIS le nom, email, téléphone ou coordonnées du candidat
+`;
 
+    // === Préparation du contenu envoyé à Claude ===
     const content: any[] = [];
 
+    // Inclure le CV en base64
     if (cvPdfBase64) {
       content.push({
         type: "document",
@@ -42,71 +49,28 @@ RÈGLES :
       });
     }
 
-    // === Construire le header unique ===
-    let headerText = "";
-    if (profileInfo) {
-      const firstName = profileInfo.firstName ?? profileInfo.first_name ?? "";
-      const lastName = profileInfo.lastName ?? profileInfo.last_name ?? "";
-      const phoneNumber = profileInfo.phoneNumber ?? profileInfo.phone_number ?? "";
-      const professionalEmail = profileInfo.professionalEmail ?? profileInfo.professional_email ?? "";
-      const linkedinUrl = profileInfo.linkedinUrl ?? profileInfo.linkedin_url ?? "";
-      const desiredPosition = profileInfo.desiredPosition ?? profileInfo.desired_position ?? "";
-      const durationMin = profileInfo.durationMin ?? profileInfo.duration_min ?? "";
-      const durationMax = profileInfo.durationMax ?? profileInfo.duration_max ?? "";
-      const availableFrom = profileInfo.availableFrom ?? profileInfo.available_from ?? "";
-
-      const fullName = `${firstName} ${lastName}`.trim().toUpperCase();
-      if (fullName) headerText += `${fullName}\n\n`;
-
-      // 🧭 Date formatée en français
-      let startDateText = "";
-      if (availableFrom) {
-        try {
-          const date = new Date(availableFrom);
-          startDateText = date.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
-          startDateText = startDateText.charAt(0).toUpperCase() + startDateText.slice(1);
-        } catch {
-          startDateText = availableFrom;
-        }
-      }
-
-      let subtitle = "";
-      if (desiredPosition) subtitle += desiredPosition;
-      if (durationMin && durationMax) subtitle += ` - de ${durationMin} à ${durationMax} mois`;
-      else if (durationMin) subtitle += ` - ${durationMin} mois`;
-      if (startDateText) subtitle += ` - à partir de ${startDateText}`;
-      if (subtitle) headerText += `${subtitle}\n`;
-
-      const contactParts = [];
-      if (phoneNumber) contactParts.push(phoneNumber);
-      if (professionalEmail) contactParts.push(professionalEmail);
-      if (linkedinUrl) contactParts.push(linkedinUrl);
-      if (contactParts.length > 0) {
-        headerText += `${contactParts.join(" • ")}\n\n`;
-      }
-
-      if (jobTitle) headerText += `Stage – ${jobTitle} (${companyName})\n\n`;
-    }
-
-    // === Nouveau prompt ultra précis ===
+    // === PROMPT PRINCIPAL ===
     const textPrompt = `
-Rédige le corps d'une lettre de motivation professionnelle et naturelle pour le poste suivant :
+Rédige le corps complet d'une lettre de motivation professionnelle pour un poste.
 
-Poste : ${jobTitle}
-Entreprise : ${companyName}
-${jobDescription ? `Description de l'offre : ${jobDescription}` : ""}
-
-Ne répète pas les informations suivantes (elles seront affichées ailleurs) :
-${headerText}
+Contexte :
+- Poste : ${jobTitle}
+- Entreprise : ${companyName}
+${jobDescription ? `- Description de l'offre : ${jobDescription}` : ""}
+- Les informations personnelles du candidat (nom, téléphone, email, etc.) sont déjà ajoutées ailleurs dans l'application.
 
 Règles STRICTES :
 1️⃣ Commence directement par "Madame, Monsieur,".
-2️⃣ N'ajoute AUCUNE information d'en-tête (nom, téléphone, email, poste, etc.).
-3️⃣ Ne signe pas la lettre (pas de "Cordialement" ou de nom à la fin).
-4️⃣ Sois fluide, professionnel et cohérent avec le CV.
-5️⃣ Fais entre 300 et 400 mots maximum.
+2️⃣ N'ajoute AUCUNE information d'en-tête (nom, contact, titre, entreprise, etc.).
+3️⃣ Ne signe PAS la lettre (pas de "Cordialement" ni de nom).
+4️⃣ Écris un texte fluide, clair et professionnel.
+5️⃣ Longueur recommandée : entre 300 et 400 mots.
+6️⃣ Sois cohérent avec les expériences et la formation visibles dans le CV fourni.
 
-Structure claire : 3 à 4 paragraphes.
+Structure recommandée :
+- Introduction (motivation + lien avec le poste)
+- Développement (expériences, compétences pertinentes)
+- Conclusion (intérêt, ouverture à un entretien)
 `;
 
     content.push({
@@ -114,6 +78,7 @@ Structure claire : 3 à 4 paragraphes.
       text: textPrompt,
     });
 
+    // === Appel à l'API Anthropic ===
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -136,19 +101,24 @@ Structure claire : 3 à 4 paragraphes.
     }
 
     const data = await response.json();
-    const generatedBody = data?.content?.[0]?.text ?? "";
-    const generatedLetter = headerText + generatedBody;
+    const generatedLetter = data?.content?.[0]?.text ?? "";
 
-    // === Génération email de candidature ===
+    // === EMAILS DE CANDIDATURE ET DE RELANCE ===
     const firstName = profileInfo?.firstName ?? profileInfo?.first_name ?? "";
     const lastName = profileInfo?.lastName ?? profileInfo?.last_name ?? "";
     const fullName = `${firstName} ${lastName}`.trim();
 
-    const applicationEmailPrompt = `Rédige un email professionnel très court et concis en français pour postuler au poste de "${jobTitle}" chez ${companyName}.
-- 80 à 100 mots
-- Objet accrocheur
-- Mentionne lettre de motivation et CV en pièces jointes
-- Termine par "Cordialement, ${fullName}"`;
+    // Email de candidature
+    const applicationEmailPrompt = `
+Rédige un email professionnel très court et concis en français pour postuler au poste de "${jobTitle}" chez ${companyName}.
+
+Contraintes :
+- 80 à 100 mots maximum
+- Objet d'email accrocheur
+- Mentionne la lettre de motivation et le CV en pièces jointes
+- Forme polie, claire et professionnelle
+- Termine par "Cordialement, ${fullName}"
+`;
 
     const applicationEmailResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -167,12 +137,16 @@ Structure claire : 3 à 4 paragraphes.
     const applicationEmailData = await applicationEmailResponse.json();
     const applicationEmail = applicationEmailData?.content?.[0]?.text ?? "";
 
-    // === Génération email de relance ===
-    const followupEmailPrompt = `Rédige un email de relance professionnel et poli pour le poste de "${jobTitle}" chez ${companyName}.
+    // Email de relance
+    const followupEmailPrompt = `
+Rédige un email de relance professionnel et poli pour le poste de "${jobTitle}" chez ${companyName}.
+
+Contraintes :
 - 60 à 80 mots
 - Rappelle la candidature avec tact
-- Montre l'intérêt pour le poste
-- Termine par "Cordialement, ${fullName}"`;
+- Montre un intérêt sincère pour le poste
+- Termine par "Cordialement, ${fullName}"
+`;
 
     const followupEmailResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -191,6 +165,7 @@ Structure claire : 3 à 4 paragraphes.
     const followupEmailData = await followupEmailResponse.json();
     const followupEmail = followupEmailData?.content?.[0]?.text ?? "";
 
+    // === RÉPONSE ===
     return new Response(
       JSON.stringify({
         generatedLetter,
@@ -202,10 +177,15 @@ Structure claire : 3 à 4 paragraphes.
       },
     );
   } catch (error) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
-      status: 500,
-      headers: corsHeaders,
-    });
+    console.error("❌ Error:", error);
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
+      {
+        status: 500,
+        headers: corsHeaders,
+      },
+    );
   }
 });
