@@ -30,6 +30,11 @@ export const LetterPreview = ({
   const contact = [profileData?.phone_number, profileData?.professional_email, profileData?.linkedin_url]
     .filter(Boolean)
     .join(" • ");
+  
+  // Éviter la duplication si jobTitle commence déjà par "Stage" ou "STAGE"
+  const formattedTitle = jobTitle.trim().match(/^stage\s*[-–]?\s*/i) 
+    ? jobTitle 
+    : `Stage – ${jobTitle}`;
 
   return (
     <div
@@ -47,7 +52,7 @@ export const LetterPreview = ({
       {/* === TITLE === */}
       <div className="text-center mb-6">
         <h2 className="font-bold text-base">
-          Stage – {jobTitle} ({companyName})
+          {formattedTitle} ({companyName})
         </h2>
       </div>
 
