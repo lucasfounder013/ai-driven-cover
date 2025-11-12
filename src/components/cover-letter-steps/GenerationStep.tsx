@@ -177,7 +177,25 @@ export const GenerationStep = ({
       const name = `${profileData?.first_name?.toUpperCase() || "NOM"} ${
         profileData?.last_name?.toUpperCase() || "PRÉNOM"
       }`;
-      const subtitle = "Stage de 6 mois à partir de Février 2026";
+      
+      // Construire le sous-titre dynamiquement à partir du profil
+      const durationMin = profileData?.duration_min;
+      const durationMax = profileData?.duration_max;
+      const availableFrom = profileData?.available_from;
+      
+      let durationText = "";
+      if (durationMin && durationMax) {
+        if (durationMin === durationMax) {
+          durationText = `${durationMin} mois`;
+        } else {
+          durationText = `${durationMin} à ${durationMax} mois`;
+        }
+      } else if (durationMin) {
+        durationText = `${durationMin} mois`;
+      }
+      
+      const subtitle = `${profileData?.desired_position || "Stage"}${durationText ? ` de ${durationText}` : ""}${availableFrom ? ` à partir de ${availableFrom}` : ""}`;
+      
       const contact = [profileData?.phone_number, profileData?.professional_email, profileData?.linkedin_url]
         .filter(Boolean)
         .join(" • ");
