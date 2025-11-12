@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface LetterPreviewProps {
   profileData: any;
@@ -43,7 +45,20 @@ export const LetterPreview = ({
     durationText = `${durationMin} mois`;
   }
   
-  const subtitle = `${profileData?.desired_position || "Stage"}${durationText ? ` de ${durationText}` : ""}${availableFrom ? ` à partir de ${availableFrom}` : ""}`;
+  // Formater la date au format français
+  let formattedDate = "";
+  if (availableFrom) {
+    try {
+      const date = new Date(availableFrom);
+      formattedDate = format(date, "MMMM yyyy", { locale: fr });
+      // Capitaliser la première lettre
+      formattedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+    } catch (e) {
+      formattedDate = availableFrom;
+    }
+  }
+  
+  const subtitle = `${profileData?.desired_position || "Stage"}${durationText ? ` de ${durationText}` : ""}${formattedDate ? ` à partir de ${formattedDate}` : ""}`;
   
   const contact = [profileData?.phone_number, profileData?.professional_email, profileData?.linkedin_url]
     .filter(Boolean)
