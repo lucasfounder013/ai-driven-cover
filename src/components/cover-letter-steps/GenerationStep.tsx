@@ -36,7 +36,10 @@ export const GenerationStep = ({
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
-  const [emails, setEmails] = useState<EmailsData>({ applicationEmail: "", followupEmail: "" });
+  const [emails, setEmails] = useState<EmailsData>({
+    applicationEmail: "",
+    followupEmail: "",
+  });
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -82,14 +85,14 @@ export const GenerationStep = ({
       });
 
       toast({
-        title: "Lettre et emails générés",
-        description: "Votre lettre de motivation et les emails ont été créés avec succès",
+        title: "Lettre générée",
+        description: "Votre lettre de motivation et les emails ont été créés avec succès.",
       });
     } catch (error: any) {
       console.error("Error generating letter:", error);
       toast({
         title: "Erreur",
-        description: error.message || "Impossible de générer la lettre",
+        description: error.message || "Impossible de générer la lettre de motivation.",
         variant: "destructive",
       });
     } finally {
@@ -140,14 +143,14 @@ export const GenerationStep = ({
 
       toast({
         title: "Lettre sauvegardée",
-        description: "Votre lettre a été enregistrée avec succès",
+        description: "Votre lettre de motivation a été enregistrée avec succès.",
       });
       onReset();
     } catch (error: any) {
       console.error("Error saving letter:", error);
       toast({
         title: "Erreur",
-        description: error.message || "Impossible de sauvegarder la lettre",
+        description: error.message || "Impossible de sauvegarder la lettre de motivation.",
         variant: "destructive",
       });
     } finally {
@@ -155,7 +158,7 @@ export const GenerationStep = ({
     }
   };
 
-  // 📄 Téléchargement PDF (identique à la preview)
+  // 📄 Téléchargement PDF (format professionnel français)
   const downloadLetter = async () => {
     try {
       const { jsPDF } = await import("jspdf");
@@ -168,33 +171,40 @@ export const GenerationStep = ({
       const pageHeight = doc.internal.pageSize.getHeight();
       const maxWidth = pageWidth - 2 * leftMargin;
 
-      const name = `${profileData?.first_name?.toUpperCase() || "NOM"} ${profileData?.last_name?.toUpperCase() || "PRÉNOM"}`;
+      const name = `${profileData?.first_name?.toUpperCase() || "NOM"} ${
+        profileData?.last_name?.toUpperCase() || "PRÉNOM"
+      }`;
       const subtitle = "Stage de 6 mois à partir de Février 2026";
       const contact = [profileData?.phone_number, profileData?.professional_email, profileData?.linkedin_url]
         .filter(Boolean)
         .join(" • ");
       const title = `Stage – ${jobTitle} (${companyName})`;
 
-      doc.setFont("Times", "Roman");
-      doc.setFontSize(11);
-
       let y = topMargin;
-      doc.text(contact, pageWidth / 2, y, { align: "center" });
-      y += 8;
+
+      // === HEADER ===
       doc.setFont("Times", "Bold");
       doc.setFontSize(16);
       doc.text(name, pageWidth / 2, y, { align: "center" });
-      y += 8;
+      y += 7;
+
       doc.setFont("Times", "Italic");
-      doc.setFontSize(12);
+      doc.setFontSize(11);
       doc.text(subtitle, pageWidth / 2, y, { align: "center" });
+      y += 6;
+
+      doc.setFont("Times", "Roman");
+      doc.setFontSize(10);
+      doc.text(contact, pageWidth / 2, y, { align: "center" });
       y += 10;
-      doc.line(leftMargin, y, pageWidth - leftMargin, y);
-      y += 8;
+
+      // === TITRE ===
       doc.setFont("Times", "Bold");
       doc.setFontSize(13);
       doc.text(title, pageWidth / 2, y, { align: "center" });
       y += 10;
+
+      // === CORPS ===
       doc.setFont("Times", "Roman");
       doc.setFontSize(12);
 
@@ -208,17 +218,22 @@ export const GenerationStep = ({
         y += 6;
       });
 
+      // === SIGNATURE ===
+      y += 10;
+      doc.setFont("Times", "Bold");
+      doc.text(name, leftMargin, y);
+
       doc.save(`lettre_motivation_${companyName}_${Date.now()}.pdf`);
 
       toast({
         title: "Téléchargement réussi",
-        description: "Votre lettre a été téléchargée avec la mise en page correspondante",
+        description: "Votre lettre a été téléchargée avec la mise en page professionnelle.",
       });
     } catch (error) {
       console.error("Error downloading PDF:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de télécharger la lettre",
+        description: "Impossible de télécharger la lettre.",
         variant: "destructive",
       });
     }
@@ -232,7 +247,7 @@ export const GenerationStep = ({
         setCopied(true);
         toast({
           title: "Lettre copiée",
-          description: "Le texte a été copié dans le presse-papier",
+          description: "Le texte de la lettre a été copié dans le presse-papier.",
         });
         setTimeout(() => setCopied(false), 2000);
       })
@@ -240,13 +255,13 @@ export const GenerationStep = ({
         console.error("Error copying letter:", error);
         toast({
           title: "Erreur",
-          description: "Impossible de copier la lettre",
+          description: "Impossible de copier la lettre.",
           variant: "destructive",
         });
       });
   };
 
-  // 🔄 ÉTATS VISUELS
+  // 🔄 États visuels
   if (generating) {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
@@ -273,7 +288,7 @@ export const GenerationStep = ({
     );
   }
 
-  // 🧾 RENDU FINAL
+  // 🧾 Rendu final
   return (
     <div className="space-y-6">
       <div className="text-center">
