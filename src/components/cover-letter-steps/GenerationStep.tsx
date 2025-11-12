@@ -178,7 +178,12 @@ export const GenerationStep = ({
       const contact = [profileData?.phone_number, profileData?.professional_email, profileData?.linkedin_url]
         .filter(Boolean)
         .join(" • ");
-      const title = `Stage – ${jobTitle} (${companyName})`;
+      
+      // Éviter la duplication si jobTitle commence déjà par "Stage" ou "STAGE"
+      const formattedTitle = jobTitle.trim().match(/^stage\s*[-–]?\s*/i) 
+        ? jobTitle 
+        : `Stage – ${jobTitle}`;
+      const title = `${formattedTitle} (${companyName})`;
 
       let y = topMargin;
 
