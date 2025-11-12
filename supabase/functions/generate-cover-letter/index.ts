@@ -63,13 +63,16 @@ Règles STRICTES :
 2️⃣ N'ajoute AUCUNE information d'en-tête : NI le nom du candidat, NI ses coordonnées, NI le titre du poste, NI le nom de l'entreprise en haut de la lettre.
 3️⃣ Ne signe PAS la lettre (pas de "Cordialement" ni de nom à la fin).
 4️⃣ Écris un texte fluide, clair et professionnel.
-5️⃣ Longueur recommandée : entre 300 et 400 mots.
+5️⃣ Longueur OBLIGATOIRE : entre 180 et 220 mots maximum.
 6️⃣ Sois cohérent avec les expériences et la formation visibles dans le CV fourni.
+7️⃣ Sois synthétique tout en restant professionnel et précis.
 
-Structure recommandée :
-- Introduction (motivation + lien avec le poste)
-- Développement (expériences, compétences pertinentes)
-- Conclusion (intérêt, ouverture à un entretien)
+Structure OBLIGATOIRE (3 paragraphes maximum) :
+- Paragraphe 1 : Introduction courte (motivation + lien avec le poste)
+- Paragraphe 2 : Développement concis (1-2 expériences ou compétences les plus pertinentes)
+- Paragraphe 3 : Conclusion brève (intérêt + ouverture à un entretien)
+
+Chaque paragraphe doit être fluide et naturel, sans redondance.
 `;
 
     content.push({
