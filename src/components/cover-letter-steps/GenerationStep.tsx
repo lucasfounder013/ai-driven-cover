@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Loader2, Download, Sparkles, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -42,6 +43,7 @@ export const GenerationStep = ({
   });
   const { toast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // 🧠 Génération automatique via Supabase Edge Function
   const generateLetter = async () => {
@@ -146,6 +148,7 @@ export const GenerationStep = ({
         description: "Votre lettre de motivation a été enregistrée avec succès.",
       });
       onReset();
+      navigate("/dashboard");
     } catch (error: any) {
       console.error("Error saving letter:", error);
       toast({
