@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface LetterPreviewProps {
   profileData: any;
@@ -16,12 +16,14 @@ export const LetterPreview = ({
   setGeneratedLetter,
 }: LetterPreviewProps) => {
   const editableRef = useRef<HTMLDivElement>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (editableRef.current && generatedLetter) {
+    if (editableRef.current && generatedLetter && !isInitialized) {
       editableRef.current.innerText = generatedLetter;
+      setIsInitialized(true);
     }
-  }, [generatedLetter]);
+  }, [generatedLetter, isInitialized]);
 
   const name = `${profileData?.first_name?.toUpperCase() || "NOM"} ${profileData?.last_name?.toUpperCase() || "PRÉNOM"}`;
   const subtitle = "Stage de 6 mois à partir de Février 2026";
