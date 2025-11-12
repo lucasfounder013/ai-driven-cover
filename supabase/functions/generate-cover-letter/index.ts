@@ -112,17 +112,39 @@ Chaque paragraphe doit être fluide et naturel, sans redondance.
     const lastName = profileInfo?.lastName ?? profileInfo?.last_name ?? "";
     const fullName = `${firstName} ${lastName}`.trim();
 
-    // Email de candidature
+    // Email de candidature - avec CV
+    const applicationEmailContent: any[] = [];
+    
+    if (cvPdfBase64) {
+      applicationEmailContent.push({
+        type: "document",
+        source: {
+          type: "base64",
+          media_type: "application/pdf",
+          data: cvPdfBase64,
+        },
+      });
+    }
+
     const applicationEmailPrompt = `
 Rédige un email professionnel très court et concis en français pour postuler au poste de "${jobTitle}" chez ${companyName}.
+
+IMPORTANT : Utilise les informations du CV fourni pour personnaliser l'email de manière pertinente.
+${jobDescription ? `Description du poste : ${jobDescription}` : ""}
 
 Contraintes :
 - 80 à 100 mots maximum
 - Objet d'email accrocheur
+- Mentionne brièvement 1-2 compétences/expériences clés du CV pertinentes pour le poste
 - Mentionne la lettre de motivation et le CV en pièces jointes
 - Forme polie, claire et professionnelle
 - Termine par "Cordialement, ${fullName}"
 `;
+
+    applicationEmailContent.push({
+      type: "text",
+      text: applicationEmailPrompt,
+    });
 
     const applicationEmailResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -134,23 +156,45 @@ Contraintes :
       body: JSON.stringify({
         model: "claude-sonnet-4-5",
         max_tokens: 1024,
-        messages: [{ role: "user", content: applicationEmailPrompt }],
+        messages: [{ role: "user", content: applicationEmailContent }],
       }),
     });
 
     const applicationEmailData = await applicationEmailResponse.json();
     const applicationEmail = applicationEmailData?.content?.[0]?.text ?? "";
 
-    // Email de relance
+    // Email de relance - avec CV
+    const followupEmailContent: any[] = [];
+    
+    if (cvPdfBase64) {
+      followupEmailContent.push({
+        type: "document",
+        source: {
+          type: "base64",
+          media_type: "application/pdf",
+          data: cvPdfBase64,
+        },
+      });
+    }
+
     const followupEmailPrompt = `
 Rédige un email de relance professionnel et poli pour le poste de "${jobTitle}" chez ${companyName}.
+
+IMPORTANT : Utilise les informations du CV fourni pour rappeler subtilement ta valeur ajoutée.
+${jobDescription ? `Description du poste : ${jobDescription}` : ""}
 
 Contraintes :
 - 60 à 80 mots
 - Rappelle la candidature avec tact
+- Mentionne brièvement 1 compétence/expérience clé du CV alignée avec le poste
 - Montre un intérêt sincère pour le poste
 - Termine par "Cordialement, ${fullName}"
 `;
+
+    followupEmailContent.push({
+      type: "text",
+      text: followupEmailPrompt,
+    });
 
     const followupEmailResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -162,7 +206,7 @@ Contraintes :
       body: JSON.stringify({
         model: "claude-sonnet-4-5",
         max_tokens: 1024,
-        messages: [{ role: "user", content: followupEmailPrompt }],
+        messages: [{ role: "user", content: followupEmailContent }],
       }),
     });
 
