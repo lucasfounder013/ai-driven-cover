@@ -112,6 +112,7 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
               onReset={handleReset}
               onSave={onBack}
               existingLetterId={editingLetter?.id}
+              existingProfileData={editingLetter?.profile_data}
             />
           )}
         </div>
