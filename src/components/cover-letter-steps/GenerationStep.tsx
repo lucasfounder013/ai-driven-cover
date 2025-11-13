@@ -19,6 +19,7 @@ interface GenerationStepProps {
   onReset: () => void;
   onSave?: () => void;
   existingLetterId?: string;
+  existingProfileData?: any;
 }
 
 interface EmailsData {
@@ -36,11 +37,12 @@ export const GenerationStep = ({
   onReset,
   onSave,
   existingLetterId,
+  existingProfileData,
 }: GenerationStepProps) => {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [profileData, setProfileData] = useState<any>(null);
+  const [profileData, setProfileData] = useState<any>(existingProfileData || null);
   const [emails, setEmails] = useState<EmailsData>({
     applicationEmail: "",
     followupEmail: "",
@@ -126,6 +128,7 @@ export const GenerationStep = ({
             generated_letter: generatedLetter,
             application_email: emails.applicationEmail,
             followup_email: emails.followupEmail,
+            profile_data: profileData,
             updated_at: new Date().toISOString(),
           })
           .eq("id", existingLetterId);
@@ -141,6 +144,7 @@ export const GenerationStep = ({
           generated_letter: generatedLetter,
           application_email: emails.applicationEmail,
           followup_email: emails.followupEmail,
+          profile_data: profileData,
           status: "final",
         });
 
