@@ -20,7 +20,126 @@ export const LetterPreview = ({
   setGeneratedLetter,
 }: LetterPreviewProps) => {
   const editableRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  //
+  // ============================================================
+  // 1. Construction du texte d’en-tête (affichage)
+  // ============================================================
+  //
+
+  const name = `${profileData?.first_name?.toUpperCase() || "NOM"} ${profileData?.last_name?.toUpperCase() || "PRÉNOM"}`;
+
+  // Durée
+  const min = profileData?.duration_min;
+  const max = profileData?.duration_max;
+  let duration = "";
+  if (min && max) duration = min === max ? `${min} mois` : `${min} à ${max} mois`;
+  else if (min) duration = `${min} mois`;
+
+  // Date
+  let startDate = "";
+  if (profileData?.available_from) {
+    try {
+      const date = new Date(profileData.available_from);
+      startDate = format(date, "MMMM yyyy", { locale: fr });
+      startDate = startDate.charAt(0).toUpperCase() + startDate.slice(1);
+    } catch {
+      startDate = profileData.available_from;
+    }
+  }
+
+  const subtitle = `${profileData?.desired_position || "Stage"}${duration ? ` de ${duration}` : ""}${startDate ? ` à partir de ${startDate}` : ""}`;
+
+  const contact = [profileData?.phone_number, profileData?.professional_email, profileData?.linkedin_url]
+    .filter(Boolean)
+    .join(" • ");
+
+  // Titre du poste
+  const formattedTitle = jobTitle.trim().match(/^stage\s*[-–]?\s*/i) ? jobTitle : `Stage – ${jobTitle}`;
+
+  //
+  // ============================================================
+  // 2. Header textuel (unique contentEditable)
+  // ============================================================
+  //
+
+  const headerText = `${name}
+${subtitle}
+${contact}`;
+
+  //
+  // ============================================================
+  // 3. Parser le header pour mettre à jour le state
+  // ============================================================
+  //
+
+  const parseHeader = () => {
+    if (!headerRef.current) return;
+
+    const text = headerRef.current.innerText;
+    const lines = text.split("\n").map((l) => l.trim());
+
+    const line1 = lines[0] || "";
+    const line2 = lines[1] || "";
+    const line3 = lines[2] || "";
+
+    // Extraction simple et robuste
+    const [first_name = "", last_name = ""] = line1.split(" ");
+
+    const phone = line3.match(/[0-9\s\+\-\.]{8,}/)?.[0] || "";
+    const email = line3.match(/[^\s]+@[^\s]+/)?.[0] || "";
+    const linkedin = line3.includes("linkedin")
+      ? line3
+          .split("•")
+          .find((x) => x.includes("linkedin"))
+          ?.trim()
+      : profileData.linkedin_url;
+
+    // Extraction date
+    let extractedDate = profileData.available_from;
+    const dateRegex = /(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s+\d{4}/i;
+    const foundDate = line2.match(dateRegex);
+    if (foundDate) extractedDate = foundDate[0];
+
+    // Extraction durée
+    let extractedMin = profileData.duration_min;
+    let extractedMax = profileData.duration_max;
+    const durationRegex = /(\d+)\s*(?:à|-)\s*(\d+)\s*mois/i;
+    const singleDurationRegex = /(\d+)\s*mois/;
+
+    const range = line2.match(durationRegex);
+    if (range) {
+      extractedMin = Number(range[1]);
+      extractedMax = Number(range[2]);
+    } else {
+      const single = line2.match(singleDurationRegex);
+      if (single) {
+        extractedMin = Number(single[1]);
+        extractedMax = Number(single[1]);
+      }
+    }
+
+    setProfileData({
+      ...profileData,
+      first_name: first_name.toUpperCase(),
+      last_name: last_name.toUpperCase(),
+      desired_position: line2.split(" de ")[0] || profileData.desired_position,
+      duration_min: extractedMin,
+      duration_max: extractedMax,
+      available_from: extractedDate,
+      phone_number: phone,
+      professional_email: email,
+      linkedin_url: linkedin,
+    });
+  };
+
+  //
+  // ============================================================
+  // 4. Initialisation du corps de lettre
+  // ============================================================
+  //
 
   useEffect(() => {
     if (editableRef.current && generatedLetter && !isInitialized) {
@@ -29,47 +148,11 @@ export const LetterPreview = ({
     }
   }, [generatedLetter, isInitialized]);
 
-  const name = `${profileData?.first_name?.toUpperCase() || "NOM"} ${profileData?.last_name?.toUpperCase() || "PRÉNOM"}`;
-  
-  // Construire le sous-titre dynamiquement à partir du profil
-  const durationMin = profileData?.duration_min;
-  const durationMax = profileData?.duration_max;
-  const availableFrom = profileData?.available_from;
-  
-  let durationText = "";
-  if (durationMin && durationMax) {
-    if (durationMin === durationMax) {
-      durationText = `${durationMin} mois`;
-    } else {
-      durationText = `${durationMin} à ${durationMax} mois`;
-    }
-  } else if (durationMin) {
-    durationText = `${durationMin} mois`;
-  }
-  
-  // Formater la date au format français
-  let formattedDate = "";
-  if (availableFrom) {
-    try {
-      const date = new Date(availableFrom);
-      formattedDate = format(date, "MMMM yyyy", { locale: fr });
-      // Capitaliser la première lettre
-      formattedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
-    } catch (e) {
-      formattedDate = availableFrom;
-    }
-  }
-  
-  const subtitle = `${profileData?.desired_position || "Stage"}${durationText ? ` de ${durationText}` : ""}${formattedDate ? ` à partir de ${formattedDate}` : ""}`;
-  
-  const contact = [profileData?.phone_number, profileData?.professional_email, profileData?.linkedin_url]
-    .filter(Boolean)
-    .join(" • ");
-  
-  // Éviter la duplication si jobTitle commence déjà par "Stage" ou "STAGE"
-  const formattedTitle = jobTitle.trim().match(/^stage\s*[-–]?\s*/i) 
-    ? jobTitle 
-    : `Stage – ${jobTitle}`;
+  //
+  // ============================================================
+  // 5. Render
+  // ============================================================
+  //
 
   return (
     <div
@@ -77,123 +160,16 @@ export const LetterPreview = ({
       className="bg-white p-10 rounded-xl max-w-[700px] mx-auto text-[14px] leading-relaxed text-gray-900 shadow-sm border font-[Times]"
       style={{ fontFamily: "Times New Roman, serif" }}
     >
-      {/* === HEADER (editable) === */}
-      <div className="text-center mb-4">
-        <div className="text-xl font-bold tracking-wide flex justify-center gap-2">
-          <div
-            contentEditable
-            suppressContentEditableWarning
-            onInput={(e) => setProfileData({ ...profileData, first_name: (e.target as HTMLElement).innerText })}
-            className="focus:outline-none focus:ring-1 focus:ring-primary rounded px-1"
-          >
-            {profileData?.first_name?.toUpperCase() || "NOM"}
-          </div>
-          <div
-            contentEditable
-            suppressContentEditableWarning
-            onInput={(e) => setProfileData({ ...profileData, last_name: (e.target as HTMLElement).innerText })}
-            className="focus:outline-none focus:ring-1 focus:ring-primary rounded px-1"
-          >
-            {profileData?.last_name?.toUpperCase() || "PRÉNOM"}
-          </div>
-        </div>
-        
-        <div className="italic text-sm text-gray-700 flex justify-center gap-1 flex-wrap">
-          <div
-            contentEditable
-            suppressContentEditableWarning
-            onInput={(e) => setProfileData({ ...profileData, desired_position: (e.target as HTMLElement).innerText })}
-            className="focus:outline-none focus:ring-1 focus:ring-primary rounded px-1"
-          >
-            {profileData?.desired_position || "Stage"}
-          </div>
-          {durationText && (
-            <>
-              <span>de</span>
-              <div className="flex gap-1">
-                <div
-                  contentEditable
-                  suppressContentEditableWarning
-                  onInput={(e) => {
-                    const val = parseInt((e.target as HTMLElement).innerText) || "";
-                    setProfileData({ ...profileData, duration_min: val });
-                  }}
-                  className="focus:outline-none focus:ring-1 focus:ring-primary rounded px-1"
-                >
-                  {profileData?.duration_min || ""}
-                </div>
-                {durationMin !== durationMax && (
-                  <>
-                    <span>à</span>
-                    <div
-                      contentEditable
-                      suppressContentEditableWarning
-                      onInput={(e) => {
-                        const val = parseInt((e.target as HTMLElement).innerText) || "";
-                        setProfileData({ ...profileData, duration_max: val });
-                      }}
-                      className="focus:outline-none focus:ring-1 focus:ring-primary rounded px-1"
-                    >
-                      {profileData?.duration_max || ""}
-                    </div>
-                  </>
-                )}
-                <span>mois</span>
-              </div>
-            </>
-          )}
-          {formattedDate && (
-            <>
-              <span>à partir de</span>
-              <div
-                contentEditable
-                suppressContentEditableWarning
-                onInput={(e) => setProfileData({ ...profileData, available_from: (e.target as HTMLElement).innerText })}
-                className="focus:outline-none focus:ring-1 focus:ring-primary rounded px-1"
-              >
-                {formattedDate}
-              </div>
-            </>
-          )}
-        </div>
-        
-        <div className="text-sm text-gray-700 mt-1 flex justify-center gap-1 flex-wrap">
-          {profileData?.phone_number && (
-            <>
-              <div
-                contentEditable
-                suppressContentEditableWarning
-                onInput={(e) => setProfileData({ ...profileData, phone_number: (e.target as HTMLElement).innerText })}
-                className="focus:outline-none focus:ring-1 focus:ring-primary rounded px-1"
-              >
-                {profileData.phone_number}
-              </div>
-              <span>•</span>
-            </>
-          )}
-          {profileData?.professional_email && (
-            <>
-              <div
-                contentEditable
-                suppressContentEditableWarning
-                onInput={(e) => setProfileData({ ...profileData, professional_email: (e.target as HTMLElement).innerText })}
-                className="focus:outline-none focus:ring-1 focus:ring-primary rounded px-1"
-              >
-                {profileData.professional_email}
-              </div>
-              {profileData?.linkedin_url && <span>•</span>}
-            </>
-          )}
-          {profileData?.linkedin_url && (
-            <div
-              contentEditable
-              suppressContentEditableWarning
-              onInput={(e) => setProfileData({ ...profileData, linkedin_url: (e.target as HTMLElement).innerText })}
-              className="focus:outline-none focus:ring-1 focus:ring-primary rounded px-1"
-            >
-              {profileData.linkedin_url}
-            </div>
-          )}
+      {/* === HEADER (unique bloc editable) === */}
+      <div className="text-center mb-6">
+        <div
+          ref={headerRef}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={parseHeader}
+          className="focus:outline-none focus:ring-1 focus:ring-primary rounded p-2 whitespace-pre-line"
+        >
+          {headerText}
         </div>
       </div>
 
