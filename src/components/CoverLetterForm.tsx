@@ -110,6 +110,8 @@ export const CoverLetterForm = ({ editingLetter, onBack }: CoverLetterFormProps)
               generatedLetter={generatedLetter}
               setGeneratedLetter={setGeneratedLetter}
               onReset={handleReset}
+              onSave={onBack}
+              existingLetterId={editingLetter?.id}
             />
           )}
         </div>

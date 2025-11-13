@@ -17,6 +17,7 @@ interface GenerationStepProps {
   generatedLetter: string;
   setGeneratedLetter: (letter: string) => void;
   onReset: () => void;
+  onSave?: () => void;
   existingLetterId?: string;
 }
 
@@ -33,6 +34,7 @@ export const GenerationStep = ({
   generatedLetter,
   setGeneratedLetter,
   onReset,
+  onSave,
   existingLetterId,
 }: GenerationStepProps) => {
   const [generating, setGenerating] = useState(false);
@@ -149,8 +151,13 @@ export const GenerationStep = ({
         title: "Lettre sauvegardée",
         description: "Votre lettre de motivation a été enregistrée avec succès.",
       });
-      onReset();
-      navigate("/dashboard");
+      
+      if (onSave) {
+        onSave();
+      } else {
+        onReset();
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       console.error("Error saving letter:", error);
       toast({
