@@ -1,13 +1,22 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Sparkles, Copy, Check } from "lucide-react";
+import { Loader2, Download, Sparkles, Copy, Check, Edit3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { LetterPreview } from "./LetterPreview";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface GenerationStepProps {
   cvPath: string;
@@ -47,6 +56,8 @@ export const GenerationStep = ({
     applicationEmail: "",
     followupEmail: "",
   });
+  const [editHeaderOpen, setEditHeaderOpen] = useState(false);
+  const [editedProfileData, setEditedProfileData] = useState<any>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -313,6 +324,32 @@ export const GenerationStep = ({
       });
   };
 
+  // ✏️ Ouvrir le dialogue d'édition de l'en-tête
+  const openHeaderEdit = () => {
+    setEditedProfileData(profileData ? { ...profileData } : {
+      first_name: "",
+      last_name: "",
+      phone_number: "",
+      professional_email: "",
+      linkedin_url: "",
+      desired_position: "",
+      duration_min: "",
+      duration_max: "",
+      available_from: "",
+    });
+    setEditHeaderOpen(true);
+  };
+
+  // 💾 Sauvegarder les modifications de l'en-tête
+  const saveHeaderEdit = () => {
+    setProfileData(editedProfileData);
+    setEditHeaderOpen(false);
+    toast({
+      title: "En-tête modifié",
+      description: "Les informations de l'en-tête ont été mises à jour.",
+    });
+  };
+
   // 🔄 États visuels
   if (generating) {
     return (
@@ -357,6 +394,9 @@ export const GenerationStep = ({
       />
 
       <div className="flex flex-wrap gap-3 justify-center">
+        <Button onClick={openHeaderEdit} variant="outline">
+          <Edit3 className="w-4 h-4 mr-2" /> Modifier l'en-tête
+        </Button>
         <Button onClick={copyLetter} variant="outline">
           {copied ? (
             <>
@@ -381,6 +421,123 @@ export const GenerationStep = ({
           )}
         </Button>
       </div>
+
+      {/* 📝 Dialogue d'édition de l'en-tête */}
+      <Dialog open={editHeaderOpen} onOpenChange={setEditHeaderOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifier l'en-tête de la lettre</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="first_name">Prénom</Label>
+                <Input
+                  id="first_name"
+                  value={editedProfileData?.first_name || ""}
+                  onChange={(e) =>
+                    setEditedProfileData({ ...editedProfileData, first_name: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="last_name">Nom</Label>
+                <Input
+                  id="last_name"
+                  value={editedProfileData?.last_name || ""}
+                  onChange={(e) =>
+                    setEditedProfileData({ ...editedProfileData, last_name: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone_number">Téléphone</Label>
+              <Input
+                id="phone_number"
+                value={editedProfileData?.phone_number || ""}
+                onChange={(e) =>
+                  setEditedProfileData({ ...editedProfileData, phone_number: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="professional_email">Email professionnel</Label>
+              <Input
+                id="professional_email"
+                type="email"
+                value={editedProfileData?.professional_email || ""}
+                onChange={(e) =>
+                  setEditedProfileData({ ...editedProfileData, professional_email: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="linkedin_url">LinkedIn</Label>
+              <Input
+                id="linkedin_url"
+                value={editedProfileData?.linkedin_url || ""}
+                onChange={(e) =>
+                  setEditedProfileData({ ...editedProfileData, linkedin_url: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="desired_position">Poste recherché</Label>
+              <Input
+                id="desired_position"
+                value={editedProfileData?.desired_position || ""}
+                onChange={(e) =>
+                  setEditedProfileData({ ...editedProfileData, desired_position: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="duration_min">Durée min (mois)</Label>
+                <Input
+                  id="duration_min"
+                  type="number"
+                  value={editedProfileData?.duration_min || ""}
+                  onChange={(e) =>
+                    setEditedProfileData({ ...editedProfileData, duration_min: parseInt(e.target.value) || "" })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="duration_max">Durée max (mois)</Label>
+                <Input
+                  id="duration_max"
+                  type="number"
+                  value={editedProfileData?.duration_max || ""}
+                  onChange={(e) =>
+                    setEditedProfileData({ ...editedProfileData, duration_max: parseInt(e.target.value) || "" })
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="available_from">Disponible à partir de</Label>
+              <Input
+                id="available_from"
+                type="date"
+                value={editedProfileData?.available_from || ""}
+                onChange={(e) =>
+                  setEditedProfileData({ ...editedProfileData, available_from: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditHeaderOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={saveHeaderEdit}>
+              Enregistrer les modifications
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
