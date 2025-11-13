@@ -25,9 +25,7 @@ export const LetterPreview = ({
   //
   // ========= Construire les valeurs affichées =========
   //
-
-  const name =
-    `${profileData?.first_name?.toUpperCase() || "NOM"} ` + `${profileData?.last_name?.toUpperCase() || "PRÉNOM"}`;
+  const name = `${profileData?.first_name?.toUpperCase() || "NOM"} ${profileData?.last_name?.toUpperCase() || "PRÉNOM"}`;
 
   const min = profileData?.duration_min;
   const max = profileData?.duration_max;
@@ -56,8 +54,17 @@ export const LetterPreview = ({
     .filter(Boolean)
     .join(" • ");
 
-  // Titre du stage (editable)
   const formattedTitle = jobTitle || "Intitulé du stage";
+
+  //
+  // ========= Initialiser le corps du texte =========
+  //
+  useEffect(() => {
+    if (editableRef.current && generatedLetter && !isInitialized) {
+      editableRef.current.innerText = generatedLetter;
+      setIsInitialized(true);
+    }
+  }, [generatedLetter, isInitialized]);
 
   //
   // ========= Render =========
@@ -93,9 +100,10 @@ export const LetterPreview = ({
           contentEditable
           suppressContentEditableWarning
           onInput={(e) => {
+            const text = (e.target as HTMLElement).innerText.trim();
             setProfileData({
               ...profileData,
-              desired_position: (e.target as HTMLElement).innerText.split(" de ")[0].trim(),
+              desired_position: text.split(" de ")[0],
             });
           }}
           className="text-sm italic text-gray-600 focus:outline-none"
@@ -108,11 +116,12 @@ export const LetterPreview = ({
           contentEditable
           suppressContentEditableWarning
           onInput={(e) => {
+            const parts = (e.target as HTMLElement).innerText.split("•").map((p) => p.trim());
             setProfileData({
               ...profileData,
-              phone_number: (e.target as HTMLElement).innerText.split("•")[0].trim(),
-              professional_email: (e.target as HTMLElement).innerText.split("•")[1]?.trim(),
-              linkedin_url: (e.target as HTMLElement).innerText.split("•")[2]?.trim(),
+              phone_number: parts[0] || "",
+              professional_email: parts[1] || "",
+              linkedin_url: parts[2] || "",
             });
           }}
           className="text-sm text-gray-600 focus:outline-none"
@@ -124,10 +133,7 @@ export const LetterPreview = ({
         <div
           contentEditable
           suppressContentEditableWarning
-          onInput={(e) => {
-            // On laisse libre et on renvoie au parent
-            // utile si tu veux enregistrer plus tard
-          }}
+          onInput={() => {}}
           className="text-base font-bold mt-3 focus:outline-none"
         >
           {`${formattedTitle} (${companyName})`}
@@ -141,7 +147,7 @@ export const LetterPreview = ({
         suppressContentEditableWarning
         onInput={(e) => setGeneratedLetter((e.target as HTMLElement).innerText)}
         className="whitespace-pre-line text-justify focus:outline-none min-h-[400px]"
-      />
+      ></div>
 
       {/* === SIGNATURE === */}
       <div className="mt-8">
