@@ -403,6 +403,7 @@ const Dashboard = () => {
               selectedFolderId={selectedFolderId}
               onFolderSelect={setSelectedFolderId}
               onNewFolder={handleCreateFolder}
+              onEditFolder={handleEditFolder}
             />
             
             <div className="flex items-center justify-between mb-8 mt-8">
