@@ -516,7 +516,7 @@ const Dashboard = () => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">Aucun dossier</SelectItem>
+                              <SelectItem value="none">Lettres non classées</SelectItem>
                               {folders.map((folder) => (
                                 <SelectItem key={folder.id} value={folder.id}>
                                   {folder.name}
