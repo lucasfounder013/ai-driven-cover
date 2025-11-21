@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, Trash2, Pencil, Copy, Edit2, Mail, MailCheck } from "lucide-react";
+import { FileText, Plus, Trash2, Pencil, Copy, Edit2, Mail, MailCheck, FolderInput } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CoverLetterForm } from "@/components/CoverLetterForm";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,6 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmailEditDialog } from "@/components/EmailEditDialog";
+import { FoldersBar } from "@/components/FoldersBar";
+import { FolderManagementDialog } from "@/components/FolderManagementDialog";
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
@@ -38,6 +40,13 @@ const Dashboard = () => {
   const [editingField, setEditingField] = useState<{ id: string; field: 'company_name' | 'job_title'; value: string } | null>(null);
   const [emailEditOpen, setEmailEditOpen] = useState(false);
   const [editingEmail, setEditingEmail] = useState<{ letter: any; type: "application" | "followup" } | null>(null);
+  
+  // Folders management
+  const [folders, setFolders] = useState<any[]>([]);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [folderDialogOpen, setFolderDialogOpen] = useState(false);
+  const [folderDialogMode, setFolderDialogMode] = useState<"create" | "edit">("create");
+  const [editingFolder, setEditingFolder] = useState<any>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -48,6 +57,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (user && !showForm) {
       fetchLetters();
+      fetchFolders();
     }
   }, [user, showForm]);
 
@@ -70,6 +80,20 @@ const Dashboard = () => {
       });
     } finally {
       setLoadingLetters(false);
+    }
+  };
+
+  const fetchFolders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('folders')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setFolders(data || []);
+    } catch (error: any) {
+      console.error('Error fetching folders:', error);
     }
   };
 
@@ -236,6 +260,122 @@ const Dashboard = () => {
     }
   };
 
+  // Folder management functions
+  const handleCreateFolder = () => {
+    setFolderDialogMode("create");
+    setEditingFolder(null);
+    setFolderDialogOpen(true);
+  };
+
+  const handleEditFolder = (folder: any) => {
+    setFolderDialogMode("edit");
+    setEditingFolder(folder);
+    setFolderDialogOpen(true);
+  };
+
+  const handleSaveFolder = async (name: string) => {
+    try {
+      if (folderDialogMode === "create") {
+        const { error } = await supabase
+          .from('folders')
+          .insert({ name, user_id: user?.id });
+
+        if (error) throw error;
+
+        toast({
+          title: "Dossier créé",
+          description: "Le dossier a été créé avec succès",
+        });
+      } else {
+        const { error } = await supabase
+          .from('folders')
+          .update({ name })
+          .eq('id', editingFolder.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Dossier modifié",
+          description: "Le dossier a été modifié avec succès",
+        });
+      }
+
+      fetchFolders();
+    } catch (error: any) {
+      console.error('Error saving folder:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder le dossier",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteFolder = async () => {
+    if (!editingFolder) return;
+
+    try {
+      const { error } = await supabase
+        .from('folders')
+        .delete()
+        .eq('id', editingFolder.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Dossier supprimé",
+        description: "Le dossier a été supprimé avec succès",
+      });
+
+      if (selectedFolderId === editingFolder.id) {
+        setSelectedFolderId(null);
+      }
+
+      fetchFolders();
+      fetchLetters();
+    } catch (error: any) {
+      console.error('Error deleting folder:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le dossier",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const moveLetterToFolder = async (letterId: string, folderId: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('cover_letters')
+        .update({ folder_id: folderId })
+        .eq('id', letterId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Lettre déplacée",
+        description: folderId ? "La lettre a été déplacée dans le dossier" : "La lettre a été retirée du dossier",
+      });
+
+      fetchLetters();
+    } catch (error: any) {
+      console.error('Error moving letter:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de déplacer la lettre",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Filter letters by selected folder
+  const filteredLetters = letters.filter((letter) => {
+    if (selectedFolderId === null) {
+      return letter.folder_id === null;
+    }
+    return letter.folder_id === selectedFolderId;
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -258,7 +398,14 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-8">
         {!showForm ? (
           <>
-            <div className="flex items-center justify-between mb-8">
+            <FoldersBar
+              folders={folders}
+              selectedFolderId={selectedFolderId}
+              onFolderSelect={setSelectedFolderId}
+              onNewFolder={handleCreateFolder}
+            />
+            
+            <div className="flex items-center justify-between mb-8 mt-8">
               <div>
                 <h1 className="text-4xl font-bold text-foreground mb-2">
                   Mes lettres de motivation
@@ -281,7 +428,7 @@ const Dashboard = () => {
                 <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                 <p className="text-muted-foreground">Chargement...</p>
               </div>
-            ) : letters.length === 0 ? (
+            ) : filteredLetters.length === 0 ? (
               <div className="bg-card rounded-xl border border-border p-16 flex flex-col items-center justify-center text-center min-h-[500px]">
                 <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-6">
                   <FileText className="w-12 h-12 text-muted-foreground" />
@@ -307,6 +454,7 @@ const Dashboard = () => {
                     <TableRow>
                       <TableHead>Nom de l'entreprise</TableHead>
                       <TableHead>Poste</TableHead>
+                      <TableHead>Dossier</TableHead>
                       <TableHead>Email de candidature</TableHead>
                       <TableHead>Email de relance</TableHead>
                       <TableHead>Réponse</TableHead>
@@ -314,7 +462,7 @@ const Dashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {letters.map((letter) => (
+                    {filteredLetters.map((letter) => (
                       <TableRow key={letter.id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
@@ -356,6 +504,26 @@ const Dashboard = () => {
                               <Edit2 className="w-3 h-3" />
                             </Button>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={letter.folder_id || "none"}
+                            onValueChange={(value) => 
+                              moveLetterToFolder(letter.id, value === "none" ? null : value)
+                            }
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Aucun dossier</SelectItem>
+                              {folders.map((folder) => (
+                                <SelectItem key={folder.id} value={folder.id}>
+                                  {folder.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell>
                           <Button
@@ -477,6 +645,15 @@ const Dashboard = () => {
           jobTitle={editingEmail.letter.job_title}
         />
       )}
+
+      <FolderManagementDialog
+        open={folderDialogOpen}
+        onOpenChange={setFolderDialogOpen}
+        mode={folderDialogMode}
+        folderName={editingFolder?.name || ""}
+        onSave={handleSaveFolder}
+        onDelete={folderDialogMode === "edit" ? handleDeleteFolder : undefined}
+      />
     </div>
   );
 };

@@ -22,6 +22,7 @@ export type Database = {
           company_name: string
           created_at: string
           cv_text: string | null
+          folder_id: string | null
           followup_email: string | null
           followup_email_recipient: string | null
           followup_email_sent_date: string | null
@@ -42,6 +43,7 @@ export type Database = {
           company_name: string
           created_at?: string
           cv_text?: string | null
+          folder_id?: string | null
           followup_email?: string | null
           followup_email_recipient?: string | null
           followup_email_sent_date?: string | null
@@ -62,6 +64,7 @@ export type Database = {
           company_name?: string
           created_at?: string
           cv_text?: string | null
+          folder_id?: string | null
           followup_email?: string | null
           followup_email_recipient?: string | null
           followup_email_sent_date?: string | null
@@ -77,6 +80,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "cover_letters_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cover_letters_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -84,6 +94,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      folders: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
