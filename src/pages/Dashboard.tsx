@@ -435,18 +435,22 @@ const Dashboard = () => {
                   <FileText className="w-12 h-12 text-muted-foreground" />
                 </div>
                 <h2 className="text-2xl font-bold text-foreground mb-4">
-                  Aucune lettre pour le moment
+                  {selectedFolderId === null ? "Aucune lettre pour le moment" : "Ce dossier est vide"}
                 </h2>
                 <p className="text-muted-foreground mb-8 max-w-md">
-                  Créez votre première lettre de motivation avec l'IA
+                  {selectedFolderId === null 
+                    ? "Créez votre première lettre de motivation avec l'IA"
+                    : "Déplacez des lettres dans ce dossier pour les organiser"}
                 </p>
-                <Button size="lg" className="gap-2" onClick={() => {
-                  setEditingLetter(null);
-                  setShowForm(true);
-                }}>
-                  <Plus className="w-5 h-5" />
-                  Créer ma première lettre
-                </Button>
+                {selectedFolderId === null && (
+                  <Button size="lg" className="gap-2" onClick={() => {
+                    setEditingLetter(null);
+                    setShowForm(true);
+                  }}>
+                    <Plus className="w-5 h-5" />
+                    Créer ma première lettre
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="bg-card rounded-xl border border-border overflow-hidden">
