@@ -29,6 +29,7 @@ export type Database = {
           id: string
           job_description: string | null
           job_title: string
+          profile_data: Json | null
           response_status: string | null
           status: string | null
           updated_at: string
@@ -48,6 +49,7 @@ export type Database = {
           id?: string
           job_description?: string | null
           job_title: string
+          profile_data?: Json | null
           response_status?: string | null
           status?: string | null
           updated_at?: string
@@ -67,6 +69,7 @@ export type Database = {
           id?: string
           job_description?: string | null
           job_title?: string
+          profile_data?: Json | null
           response_status?: string | null
           status?: string | null
           updated_at?: string
