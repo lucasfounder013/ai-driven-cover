@@ -33,7 +33,7 @@ export const FoldersBar = ({
               className="gap-2 whitespace-nowrap"
             >
               <Folder className="h-4 w-4" />
-              Aucun dossier
+              Lettres non classées
             </Button>
 
             {folders.map((folder) => (
