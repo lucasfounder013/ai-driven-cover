@@ -45,8 +45,6 @@ const Dashboard = () => {
   const [folders, setFolders] = useState<any[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
-  const [folderDialogMode, setFolderDialogMode] = useState<"create" | "edit">("create");
-  const [editingFolder, setEditingFolder] = useState<any>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -262,63 +260,64 @@ const Dashboard = () => {
 
   // Folder management functions
   const handleCreateFolder = () => {
-    setFolderDialogMode("create");
-    setEditingFolder(null);
     setFolderDialogOpen(true);
   };
 
-  const handleEditFolder = (folder: any) => {
-    setFolderDialogMode("edit");
-    setEditingFolder(folder);
-    setFolderDialogOpen(true);
+  const handleRenameFolder = async (folderId: string, newName: string) => {
+    try {
+      const { error } = await supabase
+        .from('folders')
+        .update({ name: newName })
+        .eq('id', folderId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Dossier renommé",
+        description: "Le nom du dossier a été modifié avec succès",
+      });
+
+      fetchFolders();
+    } catch (error: any) {
+      console.error('Error renaming folder:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de renommer le dossier",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSaveFolder = async (name: string) => {
     try {
-      if (folderDialogMode === "create") {
-        const { error } = await supabase
-          .from('folders')
-          .insert({ name, user_id: user?.id });
+      const { error } = await supabase
+        .from('folders')
+        .insert({ name, user_id: user?.id });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        toast({
-          title: "Dossier créé",
-          description: "Le dossier a été créé avec succès",
-        });
-      } else {
-        const { error } = await supabase
-          .from('folders')
-          .update({ name })
-          .eq('id', editingFolder.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Dossier modifié",
-          description: "Le dossier a été modifié avec succès",
-        });
-      }
+      toast({
+        title: "Dossier créé",
+        description: "Le dossier a été créé avec succès",
+      });
 
       fetchFolders();
     } catch (error: any) {
       console.error('Error saving folder:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de sauvegarder le dossier",
+        description: "Impossible de créer le dossier",
         variant: "destructive",
       });
     }
   };
 
-  const handleDeleteFolder = async () => {
-    if (!editingFolder) return;
-
+  const handleDeleteFolder = async (folderId: string) => {
     try {
       const { error } = await supabase
         .from('folders')
         .delete()
-        .eq('id', editingFolder.id);
+        .eq('id', folderId);
 
       if (error) throw error;
 
@@ -327,7 +326,7 @@ const Dashboard = () => {
         description: "Le dossier a été supprimé avec succès",
       });
 
-      if (selectedFolderId === editingFolder.id) {
+      if (selectedFolderId === folderId) {
         setSelectedFolderId(null);
       }
 
@@ -403,7 +402,8 @@ const Dashboard = () => {
               selectedFolderId={selectedFolderId}
               onFolderSelect={setSelectedFolderId}
               onNewFolder={handleCreateFolder}
-              onEditFolder={handleEditFolder}
+              onRenameFolder={handleRenameFolder}
+              onDeleteFolder={handleDeleteFolder}
             />
             
             <div className="flex items-center justify-between mb-8 mt-8">
@@ -654,10 +654,9 @@ const Dashboard = () => {
       <FolderManagementDialog
         open={folderDialogOpen}
         onOpenChange={setFolderDialogOpen}
-        mode={folderDialogMode}
-        folderName={editingFolder?.name || ""}
+        mode="create"
+        folderName=""
         onSave={handleSaveFolder}
-        onDelete={folderDialogMode === "edit" ? handleDeleteFolder : undefined}
       />
     </div>
   );
