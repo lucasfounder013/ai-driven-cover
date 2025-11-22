@@ -151,7 +151,8 @@ const Profile = () => {
 
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id,
           first_name: firstName,
           last_name: lastName,
           professional_email: professionalEmail,
@@ -162,8 +163,7 @@ const Profile = () => {
           duration_max: finalDurationMax,
           available_from: formattedDate,
           profile_completed: true,
-        })
-        .eq('id', user.id);
+        });
 
       if (error) throw error;
 
