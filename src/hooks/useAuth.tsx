@@ -106,6 +106,88 @@ export const useAuth = () => {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email envoyé !",
+        description: "Vérifiez votre boîte mail pour réinitialiser votre mot de passe.",
+      });
+
+      return { error: null };
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { error };
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Mot de passe modifié !",
+        description: "Votre mot de passe a bien été mis à jour.",
+      });
+
+      return { error: null };
+    } catch (error: any) {
+      console.error('Update password error:', error);
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { error };
+    }
+  };
+
+  const resendVerificationEmail = async () => {
+    try {
+      if (!user?.email) {
+        throw new Error("Aucun email trouvé");
+      }
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: user.email,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email renvoyé !",
+        description: "Vérifiez votre boîte mail.",
+      });
+
+      return { error: null };
+    } catch (error: any) {
+      console.error('Resend verification error:', error);
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { error };
+    }
+  };
+
   return {
     user,
     session,
@@ -113,5 +195,8 @@ export const useAuth = () => {
     signUp,
     signIn,
     signOut,
+    resetPassword,
+    updatePassword,
+    resendVerificationEmail,
   };
 };
