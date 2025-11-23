@@ -278,7 +278,7 @@ const Profile = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionnez un type de poste" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   <SelectItem value="stage">Stage</SelectItem>
                   <SelectItem value="alternance">Alternance</SelectItem>
                   <SelectItem value="premier_emploi">Premier emploi (CDI)</SelectItem>
@@ -384,7 +384,7 @@ const Profile = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Mois" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background z-50">
                       <SelectItem value="01">Janvier</SelectItem>
                       <SelectItem value="02">Février</SelectItem>
                       <SelectItem value="03">Mars</SelectItem>
@@ -405,7 +405,7 @@ const Profile = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Année" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background z-50">
                       {Array.from({ length: 5 }, (_, i) => {
                         const year = new Date().getFullYear() + i;
                         return (
