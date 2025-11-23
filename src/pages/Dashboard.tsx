@@ -520,7 +520,7 @@ const Dashboard = () => {
                             <SelectTrigger className="w-full">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-background z-50">
                               <SelectItem value="none">Lettres non classées</SelectItem>
                               {folders.map((folder) => (
                                 <SelectItem key={folder.id} value={folder.id}>
@@ -560,7 +560,7 @@ const Dashboard = () => {
                             <SelectTrigger className={`w-full ${getResponseStatusColor(letter.response_status || 'no_response')}`}>
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-background z-50">
                               <SelectItem value="no_response">Pas de réponse</SelectItem>
                               <SelectItem value="positive">Réponse positive</SelectItem>
                               <SelectItem value="negative">Réponse négative</SelectItem>
