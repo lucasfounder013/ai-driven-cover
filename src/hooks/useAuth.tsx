@@ -44,8 +44,8 @@ export const useAuth = () => {
       if (error) throw error;
 
       toast({
-        title: "Compte créé avec succès !",
-        description: "Vous pouvez maintenant vous connecter.",
+        title: "Email de vérification envoyé !",
+        description: "Vérifiez votre boîte mail pour activer votre compte.",
       });
 
       return { data, error: null };
