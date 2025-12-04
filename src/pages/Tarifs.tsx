@@ -7,9 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
-const PRODUCTS = {
+const PRICES = {
   weekly: {
-    productId: "prod_TXg0AApkC5jJSs",
+    priceId: "price_1Saae7JDrYaA8zu3ZPwQyUhc",
     name: "Hebdomadaire",
     price: "2,99€",
     period: "/semaine",
@@ -22,7 +22,7 @@ const PRODUCTS = {
     ],
   },
   monthly: {
-    productId: "prod_TXfzRYHgpmU4PT",
+    priceId: "price_1SaadvJDrYaA8zu34NVADeb3",
     name: "Mensuel",
     price: "9,99€",
     period: "/mois",
@@ -37,12 +37,12 @@ const PRODUCTS = {
 };
 
 const Tarifs = () => {
-  const [loadingProduct, setLoadingProduct] = useState<string | null>(null);
+  const [loadingPrice, setLoadingPrice] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const handleSubscribe = async (productId: string) => {
+  const handleSubscribe = async (priceId: string) => {
     if (!user) {
       toast({
         title: "Connexion requise",
@@ -53,13 +53,13 @@ const Tarifs = () => {
       return;
     }
 
-    setLoadingProduct(productId);
+    setLoadingPrice(priceId);
 
     try {
-      console.log("Calling create-checkout with productId:", productId);
+      console.log("Calling create-checkout with priceId:", priceId);
       
       const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { productId },
+        body: { priceId },
       });
 
       console.log("Response:", { data, error });
@@ -71,14 +71,13 @@ const Tarifs = () => {
 
       if (data?.error) {
         console.error("Function returned error:", data.error);
-        // Handle authentication errors from the edge function
         if (data.error.includes("not authenticated") || data.error.includes("email not available")) {
           toast({
             title: "Session expirée",
             description: "Veuillez vous reconnecter pour continuer.",
             variant: "destructive",
           });
-          setLoadingProduct(null);
+          setLoadingPrice(null);
           navigate("/auth");
           return;
         }
@@ -87,9 +86,8 @@ const Tarifs = () => {
 
       if (data?.url) {
         console.log("Redirecting to:", data.url);
-        // Don't reset loading state - let the redirect happen
         window.location.href = data.url;
-        return; // Exit early, don't reset loading
+        return;
       } else {
         console.error("No URL in response:", data);
         throw new Error("Aucune URL de paiement reçue");
@@ -101,7 +99,7 @@ const Tarifs = () => {
         description: error.message || "Une erreur est survenue lors de la création de la session de paiement.",
         variant: "destructive",
       });
-      setLoadingProduct(null);
+      setLoadingPrice(null);
     }
   };
 
@@ -118,7 +116,7 @@ const Tarifs = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {Object.entries(PRODUCTS).map(([key, plan]) => (
+          {Object.entries(PRICES).map(([key, plan]) => (
             <Card
               key={key}
               className="relative border-2 border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl"
@@ -151,10 +149,10 @@ const Tarifs = () => {
                 <Button
                   className="w-full"
                   size="lg"
-                  onClick={() => handleSubscribe(plan.productId)}
-                  disabled={loadingProduct !== null}
+                  onClick={() => handleSubscribe(plan.priceId)}
+                  disabled={loadingPrice !== null}
                 >
-                  {loadingProduct === plan.productId ? (
+                  {loadingPrice === plan.priceId ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Chargement...
