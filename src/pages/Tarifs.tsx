@@ -62,6 +62,20 @@ const Tarifs = () => {
 
       if (error) throw error;
 
+      if (data?.error) {
+        // Handle authentication errors from the edge function
+        if (data.error.includes("not authenticated") || data.error.includes("email not available")) {
+          toast({
+            title: "Session expirée",
+            description: "Veuillez vous reconnecter pour continuer.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+          return;
+        }
+        throw new Error(data.error);
+      }
+
       if (data?.url) {
         window.location.href = data.url;
       }
