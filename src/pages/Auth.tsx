@@ -19,8 +19,16 @@ const Auth = () => {
   const hasRedirected = useRef(false);
 
   useEffect(() => {
-    const checkProfileCompletion = async () => {
+    const checkSessionAndRedirect = async () => {
       if (user && !loading && !hasRedirected.current) {
+        // Verify the session is actually valid on the server
+        const { data: { user: serverUser }, error } = await supabase.auth.getUser();
+        
+        if (error || !serverUser) {
+          // Session is invalid, clear local state
+          return;
+        }
+
         hasRedirected.current = true;
         
         const { data } = await supabase
@@ -37,7 +45,7 @@ const Auth = () => {
       }
     };
     
-    checkProfileCompletion();
+    checkSessionAndRedirect();
   }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
