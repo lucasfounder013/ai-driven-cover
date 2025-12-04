@@ -56,13 +56,21 @@ const Tarifs = () => {
     setLoadingProduct(productId);
 
     try {
+      console.log("Calling create-checkout with productId:", productId);
+      
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { productId },
       });
 
-      if (error) throw error;
+      console.log("Response:", { data, error });
+
+      if (error) {
+        console.error("Invoke error:", error);
+        throw error;
+      }
 
       if (data?.error) {
+        console.error("Function returned error:", data.error);
         // Handle authentication errors from the edge function
         if (data.error.includes("not authenticated") || data.error.includes("email not available")) {
           toast({
@@ -70,6 +78,7 @@ const Tarifs = () => {
             description: "Veuillez vous reconnecter pour continuer.",
             variant: "destructive",
           });
+          setLoadingProduct(null);
           navigate("/auth");
           return;
         }
@@ -77,16 +86,21 @@ const Tarifs = () => {
       }
 
       if (data?.url) {
+        console.log("Redirecting to:", data.url);
+        // Don't reset loading state - let the redirect happen
         window.location.href = data.url;
+        return; // Exit early, don't reset loading
+      } else {
+        console.error("No URL in response:", data);
+        throw new Error("Aucune URL de paiement reçue");
       }
     } catch (error: any) {
       console.error("Checkout error:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la création de la session de paiement.",
+        description: error.message || "Une erreur est survenue lors de la création de la session de paiement.",
         variant: "destructive",
       });
-    } finally {
       setLoadingProduct(null);
     }
   };
