@@ -25,9 +25,9 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { productId } = await req.json();
-    if (!productId) throw new Error("Product ID is required");
-    logStep("Product ID received", { productId });
+    const { priceId } = await req.json();
+    if (!priceId) throw new Error("Price ID is required");
+    logStep("Price ID received", { priceId });
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
@@ -38,23 +38,12 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { email: user.email });
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not configured");
+    
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2025-08-27.basil",
     });
-
-    // Fetch the active price for the product
-    const prices = await stripe.prices.list({
-      product: productId,
-      active: true,
-      limit: 1,
-    });
-
-    if (prices.data.length === 0) {
-      throw new Error(`No active price found for product ${productId}`);
-    }
-
-    const priceId = prices.data[0].id;
-    logStep("Active price found", { priceId });
 
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
