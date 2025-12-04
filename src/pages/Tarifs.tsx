@@ -7,22 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
-const PRICES = {
-  monthly: {
-    id: "price_1SaadvJDrYaA8zu34NVADeb3",
-    name: "Mensuel",
-    price: "9,99€",
-    period: "/mois",
-    features: [
-      "Génération illimitée de lettres de motivation",
-      "Emails de candidature personnalisés",
-      "Suivi des candidatures",
-      "Export PDF professionnel",
-      "7 jours d'essai gratuit",
-    ],
-  },
+const PRODUCTS = {
   weekly: {
-    id: "price_1Saae7JDrYaA8zu3ZPwQyUhc",
+    productId: "prod_TXg0AApkC5jJSs",
     name: "Hebdomadaire",
     price: "2,99€",
     period: "/semaine",
@@ -34,15 +21,28 @@ const PRICES = {
       "7 jours d'essai gratuit",
     ],
   },
+  monthly: {
+    productId: "prod_TXfzRYHgpmU4PT",
+    name: "Mensuel",
+    price: "9,99€",
+    period: "/mois",
+    features: [
+      "Génération illimitée de lettres de motivation",
+      "Emails de candidature personnalisés",
+      "Suivi des candidatures",
+      "Export PDF professionnel",
+      "7 jours d'essai gratuit",
+    ],
+  },
 };
 
 const Tarifs = () => {
-  const [loadingPrice, setLoadingPrice] = useState<string | null>(null);
+  const [loadingProduct, setLoadingProduct] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const handleSubscribe = async (priceId: string) => {
+  const handleSubscribe = async (productId: string) => {
     if (!user) {
       toast({
         title: "Connexion requise",
@@ -53,11 +53,11 @@ const Tarifs = () => {
       return;
     }
 
-    setLoadingPrice(priceId);
+    setLoadingProduct(productId);
 
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId },
+        body: { productId },
       });
 
       if (error) throw error;
@@ -73,7 +73,7 @@ const Tarifs = () => {
         variant: "destructive",
       });
     } finally {
-      setLoadingPrice(null);
+      setLoadingProduct(null);
     }
   };
 
@@ -90,7 +90,7 @@ const Tarifs = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {Object.entries(PRICES).map(([key, plan]) => (
+          {Object.entries(PRODUCTS).map(([key, plan]) => (
             <Card
               key={key}
               className="relative border-2 border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl"
@@ -123,16 +123,16 @@ const Tarifs = () => {
                 <Button
                   className="w-full"
                   size="lg"
-                  onClick={() => handleSubscribe(plan.id)}
-                  disabled={loadingPrice !== null}
+                  onClick={() => handleSubscribe(plan.productId)}
+                  disabled={loadingProduct !== null}
                 >
-                  {loadingPrice === plan.id ? (
+                  {loadingProduct === plan.productId ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Chargement...
                     </>
                   ) : (
-                    `Choisir ${plan.name}`
+                    `Choisir l'abonnement ${plan.name.toLowerCase()}`
                   )}
                 </Button>
               </CardFooter>

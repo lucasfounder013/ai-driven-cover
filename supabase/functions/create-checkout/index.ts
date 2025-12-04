@@ -25,9 +25,9 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { priceId } = await req.json();
-    if (!priceId) throw new Error("Price ID is required");
-    logStep("Price ID received", { priceId });
+    const { productId } = await req.json();
+    if (!productId) throw new Error("Product ID is required");
+    logStep("Product ID received", { productId });
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
@@ -42,6 +42,20 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
+    // Fetch the active price for the product
+    const prices = await stripe.prices.list({
+      product: productId,
+      active: true,
+      limit: 1,
+    });
+
+    if (prices.data.length === 0) {
+      throw new Error(`No active price found for product ${productId}`);
+    }
+
+    const priceId = prices.data[0].id;
+    logStep("Active price found", { priceId });
+
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
     if (customers.data.length > 0) {
@@ -49,8 +63,6 @@ serve(async (req) => {
       logStep("Existing customer found", { customerId });
     }
 
-    const origin = req.headers.get("origin") || "https://jobboost.fr";
-    
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -64,8 +76,8 @@ serve(async (req) => {
       subscription_data: {
         trial_period_days: 7,
       },
-      success_url: `${origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/tarifs`,
+      success_url: `https://jobboost.fr/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `https://jobboost.fr/tarifs`,
     });
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
