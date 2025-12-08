@@ -2,15 +2,17 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Loader2, Shield } from "lucide-react";
+import { Check, Loader2, Shield, Star, Quote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Badge } from "@/components/ui/badge";
 
 const PRICES = {
   weekly: {
     priceId: "price_1Saae7JDrYaA8zu3ZPwQyUhc",
     name: "Hebdomadaire",
+    subtitle: "Idéal pour tester ou pour un besoin court.",
     price: "2,99€",
     period: "/semaine",
     features: [
@@ -20,10 +22,12 @@ const PRICES = {
       "Export PDF professionnel",
       "7 jours d'essai gratuit",
     ],
+    isBestChoice: false,
   },
   monthly: {
     priceId: "price_1SaadvJDrYaA8zu34NVADeb3",
     name: "Mensuel",
+    subtitle: "Le meilleur choix pour une recherche d'emploi continue.",
     price: "9,99€",
     period: "/mois",
     features: [
@@ -33,8 +37,27 @@ const PRICES = {
       "Export PDF professionnel",
       "7 jours d'essai gratuit",
     ],
+    isBestChoice: true,
   },
 };
+
+const TESTIMONIALS = [
+  {
+    name: "Marie L.",
+    role: "Chargée de marketing",
+    content: "J'ai décroché 3 entretiens en une semaine grâce à JobBoost. Les lettres sont vraiment personnalisées !",
+  },
+  {
+    name: "Thomas D.",
+    role: "Développeur junior",
+    content: "Un gain de temps incroyable. Je postule maintenant en 2 minutes au lieu de 30.",
+  },
+  {
+    name: "Sophie M.",
+    role: "Étudiante en commerce",
+    content: "Parfait pour ma recherche de stage. Les recruteurs ont remarqué la qualité de mes candidatures.",
+  },
+];
 
 const Tarifs = () => {
   const [loadingPrice, setLoadingPrice] = useState<string | null>(null);
@@ -106,31 +129,44 @@ const Tarifs = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
+        {/* Hero Section */}
+        <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Choisis ton abonnement JobBoost
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Accède à tous les outils premium pour booster ta recherche d'emploi.
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Obtiens plus d'entretiens, plus vite — grâce à des candidatures professionnelles prêtes en quelques secondes.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        {/* Pricing Cards */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-20">
           {Object.entries(PRICES).map(([key, plan]) => (
             <Card
               key={key}
-              className="relative border-2 border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl"
+              className={`relative border-2 transition-all duration-300 hover:shadow-2xl ${
+                plan.isBestChoice 
+                  ? "border-primary shadow-xl shadow-primary/10 scale-[1.02]" 
+                  : "border-border hover:border-primary/50 shadow-lg"
+              }`}
             >
-              <CardHeader className="text-center pb-4">
+              {plan.isBestChoice && (
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 text-sm font-semibold">
+                  <Star className="h-3.5 w-3.5 mr-1.5 fill-current" />
+                  Meilleur choix
+                </Badge>
+              )}
+              
+              <CardHeader className="text-center pb-4 pt-8">
                 <CardTitle className="text-2xl font-bold text-foreground">
                   {plan.name}
                 </CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  Parfait pour booster vos candidatures
+                <CardDescription className="text-muted-foreground mt-2">
+                  {plan.subtitle}
                 </CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-primary">{plan.price}</span>
-                  <span className="text-muted-foreground">{plan.period}</span>
+                <div className="mt-6">
+                  <span className="text-5xl md:text-6xl font-bold text-primary">{plan.price}</span>
+                  <span className="text-lg text-muted-foreground">{plan.period}</span>
                 </div>
               </CardHeader>
               
@@ -145,7 +181,7 @@ const Tarifs = () => {
                 </ul>
               </CardContent>
               
-              <CardFooter>
+              <CardFooter className="flex flex-col gap-3">
                 <Button
                   className="w-full"
                   size="lg"
@@ -161,12 +197,46 @@ const Tarifs = () => {
                     `Choisir l'abonnement ${plan.name.toLowerCase()}`
                   )}
                 </Button>
+                <p className="text-sm text-muted-foreground text-center">
+                  Annulation à tout moment — Essai gratuit 7 jours
+                </p>
               </CardFooter>
             </Card>
           ))}
         </div>
 
-        <div className="text-center mt-12">
+        {/* Testimonials Section */}
+        <div className="max-w-5xl mx-auto mb-16">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-10">
+            Ils utilisent JobBoost
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {TESTIMONIALS.map((testimonial, index) => (
+              <Card key={index} className="border border-border/50 shadow-md bg-card/50">
+                <CardContent className="pt-6">
+                  <Quote className="h-8 w-8 text-primary/30 mb-4" />
+                  <p className="text-foreground/90 mb-4 italic">
+                    "{testimonial.content}"
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-primary font-semibold text-sm">
+                        {testimonial.name.charAt(0)}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">{testimonial.name}</p>
+                      <p className="text-muted-foreground text-xs">{testimonial.role}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Security Footer */}
+        <div className="text-center">
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <Shield className="h-5 w-5" />
             <span>Paiement sécurisé via Stripe • Annulation à tout moment</span>
