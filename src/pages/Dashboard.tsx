@@ -27,8 +27,8 @@ import {
 import { EmailEditDialog } from "@/components/EmailEditDialog";
 import { FoldersBar } from "@/components/FoldersBar";
 import { FolderManagementDialog } from "@/components/FolderManagementDialog";
-import FreemiumBanner from "@/components/FreemiumBanner";
 import SubscriptionSection from "@/components/SubscriptionSection";
+import FreeLimitPaywall from "@/components/FreeLimitPaywall";
 
 const Dashboard = () => {
   const { user, loading, subscriptionStatus } = useAuth();
@@ -47,6 +47,13 @@ const Dashboard = () => {
   const [folders, setFolders] = useState<any[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
+  
+  // Free limit tracking
+  const [totalGenerations, setTotalGenerations] = useState<number>(0);
+  const [showPaywall, setShowPaywall] = useState(false);
+  
+  const isFreePlan = !subscriptionStatus.subscribed;
+  const isFreeLimitReached = isFreePlan && totalGenerations >= 5;
 
   useEffect(() => {
     const checkPricingStatus = async () => {
@@ -76,8 +83,25 @@ const Dashboard = () => {
     if (user && !showForm) {
       fetchLetters();
       fetchFolders();
+      fetchGenerationsCount();
     }
   }, [user, showForm]);
+
+  const fetchGenerationsCount = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("total_generations_count")
+        .eq("id", user.id)
+        .single();
+
+      if (error) throw error;
+      setTotalGenerations(data?.total_generations_count || 0);
+    } catch (error) {
+      console.error("Error fetching generations count:", error);
+    }
+  };
 
   const fetchLetters = async () => {
     setLoadingLetters(true);
@@ -410,9 +434,17 @@ const Dashboard = () => {
     return null;
   }
 
+  const handleNewLetterClick = () => {
+    if (isFreeLimitReached) {
+      setShowPaywall(true);
+      return;
+    }
+    setEditingLetter(null);
+    setShowForm(true);
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      {!subscriptionStatus.subscribed && <FreemiumBanner />}
       <DashboardHeader onLogoClick={() => setShowForm(false)} />
       
       <main className="container mx-auto px-4 py-8">
@@ -442,10 +474,7 @@ const Dashboard = () => {
                   Gérez et créez vos lettres de motivation
                 </p>
               </div>
-              <Button size="lg" className="gap-2" onClick={() => {
-                setEditingLetter(null);
-                setShowForm(true);
-              }}>
+              <Button size="lg" className="gap-2" onClick={handleNewLetterClick}>
                 <Plus className="w-5 h-5" />
                 Nouvelle lettre
               </Button>
@@ -470,10 +499,7 @@ const Dashboard = () => {
                     : "Déplacez des lettres dans ce dossier pour les organiser"}
                 </p>
                 {selectedFolderId === null && (
-                  <Button size="lg" className="gap-2" onClick={() => {
-                    setEditingLetter(null);
-                    setShowForm(true);
-                  }}>
+                  <Button size="lg" className="gap-2" onClick={handleNewLetterClick}>
                     <Plus className="w-5 h-5" />
                     Créer ma première lettre
                   </Button>
@@ -685,6 +711,8 @@ const Dashboard = () => {
         folderName=""
         onSave={handleSaveFolder}
       />
+      
+      <FreeLimitPaywall open={showPaywall} onOpenChange={setShowPaywall} />
     </div>
   );
 };
