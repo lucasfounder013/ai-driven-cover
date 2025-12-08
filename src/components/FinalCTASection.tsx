@@ -10,10 +10,10 @@ const FinalCTASection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center max-w-4xl mx-auto">
           <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
-            Prêt à accélérer votre recherche d'emploi ?
+            Prêt à décrocher votre prochain emploi ?
           </h2>
           <p className="text-lg text-muted-foreground mb-10">
-            Créez votre première lettre professionnelle en quelques minutes.
+            Créez votre première lettre de motivation en quelques minutes
           </p>
           <Button 
             variant="hero" 
