@@ -28,6 +28,7 @@ import { EmailEditDialog } from "@/components/EmailEditDialog";
 import { FoldersBar } from "@/components/FoldersBar";
 import { FolderManagementDialog } from "@/components/FolderManagementDialog";
 import FreemiumBanner from "@/components/FreemiumBanner";
+import SubscriptionSection from "@/components/SubscriptionSection";
 
 const Dashboard = () => {
   const { user, loading, subscriptionStatus } = useAuth();
@@ -48,9 +49,27 @@ const Dashboard = () => {
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
+    const checkPricingStatus = async () => {
+      if (!loading && !user) {
+        navigate('/auth');
+        return;
+      }
+
+      if (user) {
+        // Check if user has seen pricing page
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('has_seen_pricing')
+          .eq('id', user.id)
+          .single();
+
+        if (!error && profile && !profile.has_seen_pricing) {
+          navigate('/tarifs');
+        }
+      }
+    };
+
+    checkPricingStatus();
   }, [user, loading, navigate]);
 
   useEffect(() => {
@@ -399,6 +418,12 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-8">
         {!showForm ? (
           <>
+            <SubscriptionSection 
+              subscribed={subscriptionStatus.subscribed} 
+              subscriptionEnd={subscriptionStatus.subscriptionEnd}
+              userId={user.id}
+            />
+            
             <FoldersBar
               folders={folders}
               selectedFolderId={selectedFolderId}

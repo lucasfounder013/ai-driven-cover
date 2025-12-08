@@ -131,6 +131,7 @@ export type Database = {
           first_name: string | null
           full_name: string | null
           has_active_subscription: boolean
+          has_seen_pricing: boolean
           id: string
           last_name: string | null
           linkedin_url: string | null
@@ -152,6 +153,7 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           has_active_subscription?: boolean
+          has_seen_pricing?: boolean
           id: string
           last_name?: string | null
           linkedin_url?: string | null
@@ -173,6 +175,7 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           has_active_subscription?: boolean
+          has_seen_pricing?: boolean
           id?: string
           last_name?: string | null
           linkedin_url?: string | null

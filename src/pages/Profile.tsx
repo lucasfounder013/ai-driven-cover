@@ -172,7 +172,8 @@ const Profile = () => {
         description: 'Vos informations ont été enregistrées avec succès.',
       });
 
-      navigate('/dashboard', { replace: true });
+      // Redirect to /tarifs for new users who haven't seen pricing yet
+      navigate('/tarifs', { replace: true });
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
