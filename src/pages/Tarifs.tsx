@@ -145,10 +145,19 @@ const Tarifs = () => {
     }
   };
 
-  const handleFreePlan = () => {
+  const handleFreePlan = async () => {
     if (!user) {
       navigate("/auth");
     } else {
+      // Mark has_seen_pricing as true
+      try {
+        await supabase
+          .from("profiles")
+          .update({ has_seen_pricing: true })
+          .eq("id", user.id);
+      } catch (error) {
+        console.error("Error updating has_seen_pricing:", error);
+      }
       navigate("/dashboard");
     }
   };
