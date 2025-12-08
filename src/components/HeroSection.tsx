@@ -1,12 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
-
 const HeroSection = () => {
   const navigate = useNavigate();
-
-  return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+  return <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Gradient Background */}
       <div className="absolute inset-0 bg-[var(--gradient-hero)]" />
       
@@ -14,10 +11,8 @@ const HeroSection = () => {
       <div className="relative z-10 container mx-auto px-4 py-20 text-center">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--gradient-badge)] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium text-primary">
-            Propulsé par l'Intelligence Artificielle
-          </span>
+          
+          
         </div>
 
         {/* Heading */}
@@ -38,27 +33,15 @@ const HeroSection = () => {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom-7 duration-700 delay-500">
-          <Button 
-            variant="hero" 
-            size="xl" 
-            className="gap-2 min-w-[280px]"
-            onClick={() => navigate('/auth')}
-          >
+          <Button variant="hero" size="xl" className="gap-2 min-w-[280px]" onClick={() => navigate('/auth')}>
             <Sparkles className="w-5 h-5" />
             Créer ma lettre gratuitement
           </Button>
-          <Button 
-            variant="outline-white" 
-            size="xl" 
-            className="min-w-[200px]"
-            onClick={() => navigate('/auth')}
-          >
+          <Button variant="outline-white" size="xl" className="min-w-[200px]" onClick={() => navigate('/auth')}>
             Se connecter
           </Button>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
