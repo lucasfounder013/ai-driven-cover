@@ -60,15 +60,11 @@ const Auth = () => {
           setEmail('');
         }
       } else if (isLogin) {
-        const { error } = await signIn(email, password);
-        if (error && error.message.includes('Email not confirmed')) {
-          setShowEmailVerification(true);
-        }
+        await signIn(email, password);
+        // Email verification check disabled for testing
       } else {
-        const { error } = await signUp(email, password);
-        if (!error) {
-          setShowEmailVerification(true);
-        }
+        await signUp(email, password);
+        // Auto-confirm enabled - user can login immediately
       }
     } finally {
       setIsLoading(false);
