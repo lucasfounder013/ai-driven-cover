@@ -4,8 +4,8 @@ import { FileText, Zap, Sparkles } from "lucide-react";
 const steps = [
   {
     number: "1",
-    title: "Téléversez votre CV",
-    description: "Importez votre CV en PDF ou DOCX, ou collez directement le contenu",
+    title: "Importez votre CV",
+    description: "Importez votre CV en PDF ou DOCX",
     icon: FileText,
     bgColor: "bg-[hsl(234,60%,92%)]",
     iconColor: "text-[hsl(234,70%,60%)]",
@@ -13,7 +13,7 @@ const steps = [
   {
     number: "2",
     title: "Décrivez le poste",
-    description: "Collez l'annonce du poste ou décrivez vos aspirations professionnelles",
+    description: "Collez l'offre ou décrivez votre objectif",
     icon: Zap,
     bgColor: "bg-[hsl(234,60%,92%)]",
     iconColor: "text-[hsl(234,70%,60%)]",
@@ -21,7 +21,7 @@ const steps = [
   {
     number: "3",
     title: "Générez et modifiez",
-    description: "L'IA crée votre lettre que vous pouvez modifier et télécharger en PDF",
+    description: "JobBoost génère une lettre personnalisée que vous pouvez modifier",
     icon: Sparkles,
     bgColor: "bg-[hsl(18,88%,90%)]",
     iconColor: "text-accent",
