@@ -20,26 +20,24 @@ const HeroSection = () => {
           </span>
         </div>
 
-        {/* Heading */}
+        {/* Heading plus simple */}
         <h1 className="text-5xl md:text-7xl font-bold text-primary leading-tight mb-6 animate-in fade-in slide-in-from-bottom-5 duration-700 delay-150">
-          Obtenez plus d&apos;entretiens
+          Votre lettre de motivation,
           <br />
-          grâce à des{" "}
           <span className="bg-gradient-to-r from-primary via-[hsl(234,60%,50%)] to-[hsl(250,70%,60%)] bg-clip-text text-transparent">
-            candidatures
+            prête en quelques minutes
           </span>
-          <br />
-          prêtes en quelques minutes
         </h1>
 
-        {/* Subtitle */}
+        {/* Subtitle plus court */}
         <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-4 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300">
-          JobBoost génère pour vous des lettres de motivation et des emails de candidature personnalisés à partir de
-          votre CV et de l&apos;offre d&apos;emploi, pour vous faire gagner un temps précieux.
+          JobBoost génère une lettre de motivation et un email de candidature personnalisés à partir de votre CV et de
+          l&apos;offre d&apos;emploi.
         </p>
 
+        {/* Petits bénéfices, une seule ligne */}
         <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-10 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-400">
-          5 candidatures gratuites • Aucune carte bancaire requise • Résultat instantané
+          5 candidatures gratuites • Aucune carte bancaire requise
         </p>
 
         {/* CTA Buttons */}
