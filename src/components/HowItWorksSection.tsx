@@ -1,33 +1,40 @@
-import { FileUp, ClipboardList, Sparkles } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { FileText, Zap, Sparkles } from "lucide-react";
 
 const steps = [
   {
-    number: "01",
+    number: "1",
     title: "Téléversez votre CV",
-    description: "Importez votre CV en PDF ou DOCX, ou collez directement son contenu.",
-    icon: FileUp,
+    description: "Importez votre CV en PDF ou DOCX, ou collez directement le contenu",
+    icon: FileText,
+    bgColor: "bg-[hsl(234,60%,92%)]",
+    iconColor: "text-[hsl(234,70%,60%)]",
   },
   {
-    number: "02",
+    number: "2",
     title: "Décrivez le poste",
-    description: "Collez l'annonce du poste ou décrivez vos aspirations professionnelles.",
-    icon: ClipboardList,
+    description: "Collez l'annonce du poste ou décrivez vos aspirations professionnelles",
+    icon: Zap,
+    bgColor: "bg-[hsl(234,60%,92%)]",
+    iconColor: "text-[hsl(234,70%,60%)]",
   },
   {
-    number: "03",
+    number: "3",
     title: "Générez et modifiez",
-    description: "L'IA crée une lettre personnalisée que vous pouvez ajuster à votre convenance.",
+    description: "L'IA crée votre lettre que vous pouvez modifier et télécharger en PDF",
     icon: Sparkles,
+    bgColor: "bg-[hsl(18,88%,90%)]",
+    iconColor: "text-accent",
   },
 ];
 
 const HowItWorksSection = () => {
   return (
-    <section className="py-24 md:py-32 bg-secondary/30">
+    <section className="py-24 bg-background">
       <div className="container mx-auto px-4">
         {/* Heading */}
-        <div className="text-center mb-16 md:mb-20">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 tracking-tight">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Comment ça marche ?
           </h2>
           <p className="text-lg text-muted-foreground">
@@ -35,43 +42,29 @@ const HowItWorksSection = () => {
           </p>
         </div>
 
-        {/* Steps */}
-        <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-8 md:gap-12">
-            {steps.map((step, index) => (
-              <div
-                key={index}
-                className="relative group"
-              >
-                {/* Connection line for desktop */}
-                {index < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-12 left-[60%] w-full h-px bg-border" />
-                )}
-                
-                <div className="relative bg-card rounded-2xl p-8 border border-border shadow-sm hover:shadow-md transition-shadow duration-300">
-                  {/* Step number */}
-                  <div className="text-5xl font-bold text-muted/50 mb-4">
-                    {step.number}
-                  </div>
-
-                  {/* Icon */}
-                  <div className="w-12 h-12 rounded-xl bg-foreground/5 flex items-center justify-center mb-5">
-                    <step.icon className="w-6 h-6 text-foreground" />
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="text-xl font-semibold text-foreground mb-3">
-                    {step.title}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="text-muted-foreground leading-relaxed">
-                    {step.description}
-                  </p>
-                </div>
+        {/* Steps Grid */}
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {steps.map((step, index) => (
+            <Card
+              key={index}
+              className="p-8 text-center border-border shadow-[var(--shadow-card)] hover:shadow-lg transition-shadow duration-300"
+            >
+              {/* Icon */}
+              <div className={`${step.bgColor} w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6`}>
+                <step.icon className={`w-10 h-10 ${step.iconColor}`} />
               </div>
-            ))}
-          </div>
+
+              {/* Title */}
+              <h3 className="text-xl font-bold text-foreground mb-3">
+                {step.number}. {step.title}
+              </h3>
+
+              {/* Description */}
+              <p className="text-muted-foreground leading-relaxed">
+                {step.description}
+              </p>
+            </Card>
+          ))}
         </div>
       </div>
     </section>

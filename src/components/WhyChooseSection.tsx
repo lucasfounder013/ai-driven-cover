@@ -1,65 +1,76 @@
-import { Target, Zap, Mail, BarChart3, Pencil } from "lucide-react";
+import { Shield, Zap, FileText } from "lucide-react";
 
 const features = [
   {
-    icon: Target,
-    title: "Ultra-personnalisé",
-    description: "Chaque lettre est adaptée à votre CV et au poste visé.",
+    icon: Shield,
+    title: "100% Personnalisé",
+    description: "Chaque lettre est unique et adaptée à votre profil et au poste visé",
+    iconColor: "text-[hsl(234,70%,60%)]",
   },
   {
     icon: Zap,
-    title: "Gagnez des heures",
-    description: "Une lettre prête en 30 secondes au lieu de 30 minutes.",
+    title: "Rapide et efficace",
+    description: "Générez une lettre professionnelle en moins de 2 minutes",
+    iconColor: "text-[hsl(234,70%,60%)]",
   },
   {
-    icon: Mail,
-    title: "Emails de candidature et de relance inclus",
-    description: "Une candidature complète générée automatiquement.",
-  },
-  {
-    icon: BarChart3,
-    title: "Suivi simplifié des candidatures",
-    description: "Gardez une vue claire de toutes vos démarches.",
-  },
-  {
-    icon: Pencil,
+    icon: FileText,
     title: "Modifiable à volonté",
-    description: "Ajustez les lettres facilement grâce à l'éditeur intégré.",
+    description: "Ajustez le contenu généré selon vos préférences avec notre éditeur",
+    iconColor: "text-[hsl(234,70%,60%)]",
   },
 ];
 
 const WhyChooseSection = () => {
   return (
-    <section className="py-24 md:py-32 bg-secondary/30">
+    <section className="py-24 bg-secondary/30">
       <div className="container mx-auto px-4">
-        <div className="max-w-5xl mx-auto">
-          {/* Heading */}
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 tracking-tight">
-              Pourquoi JobBoost est différent ?
-            </h2>
-          </div>
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left: Features List */}
+            <div className="space-y-8">
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-8">
+                Pourquoi choisir notre solution ?
+              </h2>
 
-          {/* Features grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <div 
-                key={index}
-                className={`bg-card rounded-2xl p-6 border border-border hover:border-foreground/10 transition-colors duration-300 ${
-                  index === 4 ? 'sm:col-span-2 lg:col-span-1' : ''
-                }`}
-              >
-                <div className="w-12 h-12 rounded-xl bg-foreground/5 flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-foreground" />
+              {features.map((feature, index) => (
+                <div key={index} className="flex gap-4 items-start">
+                  <div className="flex-shrink-0">
+                    <feature.icon className={`w-6 h-6 ${feature.iconColor}`} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground mb-2">
+                      {feature.title}
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {feature.description}
-                </p>
+              ))}
+            </div>
+
+            {/* Right: Example Card */}
+            <div className="bg-card rounded-2xl p-8 shadow-[var(--shadow-card)] border border-border">
+              <div className="space-y-4">
+                <div className="text-muted-foreground text-sm font-mono">
+                  // Exemple de génération
+                </div>
+                <div className="space-y-3 text-sm">
+                  <p className="text-[hsl(234,70%,60%)] font-medium">
+                    Madame, Monsieur,
+                  </p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Actuellement [votre situation], je me permets de vous adresser ma candidature pour le poste de [intitulé]...
+                  </p>
+                  <div className="flex gap-1.5 pt-2">
+                    <div className="w-2 h-2 rounded-full bg-[hsl(234,70%,60%)]"></div>
+                    <div className="w-2 h-2 rounded-full bg-[hsl(234,70%,60%)]"></div>
+                    <div className="w-2 h-2 rounded-full bg-[hsl(234,70%,60%)]"></div>
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>
