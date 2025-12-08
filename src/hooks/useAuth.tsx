@@ -3,11 +3,40 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface SubscriptionStatus {
+  subscribed: boolean;
+  subscriptionEnd: string | null;
+}
+
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
+    subscribed: false,
+    subscriptionEnd: null,
+  });
   const { toast } = useToast();
+
+  const checkSubscription = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('check-subscription');
+      
+      if (error) {
+        console.error('Error checking subscription:', error);
+        return;
+      }
+
+      if (data) {
+        setSubscriptionStatus({
+          subscribed: data.subscribed || false,
+          subscriptionEnd: data.subscription_end || null,
+        });
+      }
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -16,6 +45,15 @@ export const useAuth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Check subscription after auth state change
+        if (session?.user) {
+          setTimeout(() => {
+            checkSubscription();
+          }, 0);
+        } else {
+          setSubscriptionStatus({ subscribed: false, subscriptionEnd: null });
+        }
       }
     );
 
@@ -24,10 +62,27 @@ export const useAuth = () => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      if (session?.user) {
+        setTimeout(() => {
+          checkSubscription();
+        }, 0);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Periodic subscription check every 60 seconds
+  useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(() => {
+      checkSubscription();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   const signUp = async (email: string, password: string) => {
     try {
@@ -98,6 +153,7 @@ export const useAuth = () => {
       // Clear local state regardless
       setSession(null);
       setUser(null);
+      setSubscriptionStatus({ subscribed: false, subscriptionEnd: null });
 
       toast({
         title: "Déconnexion réussie",
@@ -108,6 +164,7 @@ export const useAuth = () => {
       // Still clear local state on error
       setSession(null);
       setUser(null);
+      setSubscriptionStatus({ subscribed: false, subscriptionEnd: null });
       toast({
         title: "Erreur lors de la déconnexion",
         description: error.message,
@@ -202,6 +259,8 @@ export const useAuth = () => {
     user,
     session,
     loading,
+    subscriptionStatus,
+    checkSubscription,
     signUp,
     signIn,
     signOut,

@@ -27,9 +27,10 @@ import {
 import { EmailEditDialog } from "@/components/EmailEditDialog";
 import { FoldersBar } from "@/components/FoldersBar";
 import { FolderManagementDialog } from "@/components/FolderManagementDialog";
+import FreemiumBanner from "@/components/FreemiumBanner";
 
 const Dashboard = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, subscriptionStatus } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
@@ -392,6 +393,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {!subscriptionStatus.subscribed && <FreemiumBanner />}
       <DashboardHeader onLogoClick={() => setShowForm(false)} />
       
       <main className="container mx-auto px-4 py-8">

@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { LetterPreview } from "./LetterPreview";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import FreeLimitPaywall from "@/components/FreeLimitPaywall";
 
 interface GenerationStepProps {
   cvPath: string;
@@ -47,8 +48,9 @@ export const GenerationStep = ({
     applicationEmail: "",
     followupEmail: "",
   });
+  const [showPaywall, setShowPaywall] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, checkSubscription } = useAuth();
   const navigate = useNavigate();
 
   // 🧠 Génération automatique via Supabase Edge Function
@@ -86,11 +88,20 @@ export const GenerationStep = ({
 
       if (error) throw error;
 
+      // Check for free limit reached
+      if (data?.error === "FREE_LIMIT_REACHED") {
+        setShowPaywall(true);
+        return;
+      }
+
       setGeneratedLetter(data.generatedLetter);
       setEmails({
         applicationEmail: data.applicationEmail || "",
         followupEmail: data.followupEmail || "",
       });
+
+      // Refresh subscription status after generation
+      checkSubscription();
 
       toast({
         title: "Lettre générée",
@@ -98,6 +109,14 @@ export const GenerationStep = ({
       });
     } catch (error: any) {
       console.error("Error generating letter:", error);
+      
+      // Check if error response contains FREE_LIMIT_REACHED
+      if (error?.message?.includes("FREE_LIMIT_REACHED") || 
+          error?.context?.body?.includes("FREE_LIMIT_REACHED")) {
+        setShowPaywall(true);
+        return;
+      }
+      
       toast({
         title: "Erreur",
         description: error.message || "Impossible de générer la lettre de motivation.",
@@ -326,62 +345,68 @@ export const GenerationStep = ({
 
   if (!generatedLetter) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 space-y-6">
-        <Sparkles className="w-20 h-20 text-primary" />
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-foreground">Prêt à générer votre lettre de motivation</h2>
-          <p className="text-muted-foreground">Cliquez sur le bouton ci-dessous pour lancer la génération</p>
+      <>
+        <div className="flex flex-col items-center justify-center py-16 space-y-6">
+          <Sparkles className="w-20 h-20 text-primary" />
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold text-foreground">Prêt à générer votre lettre de motivation</h2>
+            <p className="text-muted-foreground">Cliquez sur le bouton ci-dessous pour lancer la génération</p>
+          </div>
+          <Button onClick={generateLetter} size="lg" className="mt-4">
+            <Sparkles className="w-5 h-5 mr-2" />
+            Générer ma lettre
+          </Button>
         </div>
-        <Button onClick={generateLetter} size="lg" className="mt-4">
-          <Sparkles className="w-5 h-5 mr-2" />
-          Générer ma lettre
-        </Button>
-      </div>
+        <FreeLimitPaywall open={showPaywall} onOpenChange={setShowPaywall} />
+      </>
     );
   }
 
   // 🧾 Rendu final
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2 text-foreground">Votre lettre de motivation</h2>
-        <p className="text-muted-foreground">Cliquez sur le texte ci-dessous pour le modifier directement</p>
-      </div>
+    <>
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2 text-foreground">Votre lettre de motivation</h2>
+          <p className="text-muted-foreground">Cliquez sur le texte ci-dessous pour le modifier directement</p>
+        </div>
 
-      <LetterPreview
-        profileData={profileData}
-        setProfileData={setProfileData}
-        jobTitle={jobTitle}
-        companyName={companyName}
-        generatedLetter={generatedLetter}
-        setGeneratedLetter={setGeneratedLetter}
-      />
+        <LetterPreview
+          profileData={profileData}
+          setProfileData={setProfileData}
+          jobTitle={jobTitle}
+          companyName={companyName}
+          generatedLetter={generatedLetter}
+          setGeneratedLetter={setGeneratedLetter}
+        />
 
-      <div className="flex flex-wrap gap-3 justify-center">
-        <Button onClick={copyLetter} variant="outline">
-          {copied ? (
-            <>
-              <Check className="w-4 h-4 mr-2" /> Copié
-            </>
-          ) : (
-            <>
-              <Copy className="w-4 h-4 mr-2" /> Copier
-            </>
-          )}
-        </Button>
-        <Button onClick={downloadLetter} variant="outline">
-          <Download className="w-4 h-4 mr-2" /> Télécharger
-        </Button>
-        <Button onClick={saveLetter} disabled={saving}>
-          {saving ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sauvegarde...
-            </>
-          ) : (
-            "Sauvegarder"
-          )}
-        </Button>
+        <div className="flex flex-wrap gap-3 justify-center">
+          <Button onClick={copyLetter} variant="outline">
+            {copied ? (
+              <>
+                <Check className="w-4 h-4 mr-2" /> Copié
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4 mr-2" /> Copier
+              </>
+            )}
+          </Button>
+          <Button onClick={downloadLetter} variant="outline">
+            <Download className="w-4 h-4 mr-2" /> Télécharger
+          </Button>
+          <Button onClick={saveLetter} disabled={saving}>
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sauvegarde...
+              </>
+            ) : (
+              "Sauvegarder"
+            )}
+          </Button>
+        </div>
       </div>
-    </div>
+      <FreeLimitPaywall open={showPaywall} onOpenChange={setShowPaywall} />
+    </>
   );
 };
