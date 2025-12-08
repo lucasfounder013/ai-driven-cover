@@ -109,7 +109,12 @@ const Tarifs = () => {
 
       if (data?.url) {
         console.log("Redirecting to:", data.url);
-        window.location.href = data.url;
+        // Use window.open with _self for more reliable redirect
+        const opened = window.open(data.url, "_self");
+        if (!opened) {
+          // Fallback: direct assignment
+          window.location.assign(data.url);
+        }
         return;
       } else {
         console.error("No URL in response:", data);
