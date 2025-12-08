@@ -2,27 +2,42 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Loader2, Shield, Star, Quote } from "lucide-react";
+import { Check, Loader2, Shield, Star, Quote, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 
-const PRICES = {
+const PLANS = {
+  free: {
+    name: "Gratuit",
+    subtitle: "Idéal pour découvrir JobBoost.",
+    price: "0€",
+    period: "",
+    features: [
+      "Génération de lettres de motivation",
+      "Génération d'emails de candidature",
+      "Génération d'emails de relance",
+      "Export PDF",
+    ],
+    limitation: "5 lettres gratuites (lettres + emails confondus)",
+    isBestChoice: false,
+    isPaid: false,
+  },
   weekly: {
     priceId: "price_1Saae7JDrYaA8zu3ZPwQyUhc",
     name: "Hebdomadaire",
-    subtitle: "Idéal pour tester ou pour un besoin court.",
+    subtitle: "Parfait pour une courte période de candidature.",
     price: "2,99€",
     period: "/semaine",
     features: [
       "Génération illimitée de lettres de motivation",
-      "Emails de candidature personnalisés",
-      "Suivi des candidatures",
-      "Export PDF professionnel",
-      "7 jours d'essai gratuit",
+      "Génération illimitée d'emails de candidature",
+      "Génération illimitée d'emails de relance",
+      "Export PDF",
     ],
     isBestChoice: false,
+    isPaid: true,
   },
   monthly: {
     priceId: "price_1SaadvJDrYaA8zu34NVADeb3",
@@ -32,12 +47,12 @@ const PRICES = {
     period: "/mois",
     features: [
       "Génération illimitée de lettres de motivation",
-      "Emails de candidature personnalisés",
-      "Suivi des candidatures",
-      "Export PDF professionnel",
-      "7 jours d'essai gratuit",
+      "Génération illimitée d'emails de candidature",
+      "Génération illimitée d'emails de relance",
+      "Export PDF",
     ],
     isBestChoice: true,
+    isPaid: true,
   },
 };
 
@@ -108,7 +123,6 @@ const Tarifs = () => {
 
       if (data?.url) {
         console.log("Redirecting to Stripe Checkout:", data.url);
-        // Redirection simple et fiable
         window.location.assign(data.url);
         return;
       }
@@ -127,9 +141,15 @@ const Tarifs = () => {
         variant: "destructive",
       });
     } finally {
-      // En pratique on quitte la page si la redirection fonctionne,
-      // mais on remet à zéro pour les cas d’erreur.
       setLoadingPrice(null);
+    }
+  };
+
+  const handleFreePlan = () => {
+    if (!user) {
+      navigate("/auth");
+    } else {
+      navigate("/dashboard");
     }
   };
 
@@ -146,8 +166,8 @@ const Tarifs = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-20">
-          {Object.entries(PRICES).map(([key, plan]) => (
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-20">
+          {Object.entries(PLANS).map(([key, plan]) => (
             <Card
               key={key}
               className={`relative border-2 transition-all duration-300 hover:shadow-2xl ${
@@ -168,7 +188,7 @@ const Tarifs = () => {
                 <CardDescription className="text-muted-foreground mt-2">{plan.subtitle}</CardDescription>
                 <div className="mt-6">
                   <span className="text-5xl md:text-6xl font-bold text-primary">{plan.price}</span>
-                  <span className="text-lg text-muted-foreground">{plan.period}</span>
+                  {plan.period && <span className="text-lg text-muted-foreground">{plan.period}</span>}
                 </div>
               </CardHeader>
 
@@ -180,28 +200,52 @@ const Tarifs = () => {
                       <span className="text-foreground">{feature}</span>
                     </li>
                   ))}
+                  {'limitation' in plan && plan.limitation && (
+                    <li className="flex items-center gap-3 pt-2 border-t border-border/50">
+                      <Sparkles className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                      <span className="text-muted-foreground text-sm font-medium">{plan.limitation}</span>
+                    </li>
+                  )}
                 </ul>
               </CardContent>
 
               <CardFooter className="flex flex-col gap-3">
-                <Button
-                  className="w-full"
-                  size="lg"
-                  onClick={() => handleSubscribe(plan.priceId)}
-                  disabled={loadingPrice === plan.priceId}
-                >
-                  {loadingPrice === plan.priceId ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Chargement...
-                    </>
-                  ) : (
-                    `Choisir l'abonnement ${plan.name.toLowerCase()}`
-                  )}
-                </Button>
-                <p className="text-sm text-muted-foreground text-center">
-                  Annulation à tout moment — Essai gratuit 7 jours
-                </p>
+                {plan.isPaid ? (
+                  <>
+                    <Button
+                      className="w-full"
+                      size="lg"
+                      onClick={() => handleSubscribe((plan as any).priceId)}
+                      disabled={loadingPrice === (plan as any).priceId}
+                    >
+                      {loadingPrice === (plan as any).priceId ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Chargement...
+                        </>
+                      ) : (
+                        `Débloquer l'illimité (${plan.name.toLowerCase()})`
+                      )}
+                    </Button>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Annulation à tout moment
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      className="w-full"
+                      size="lg"
+                      variant="outline"
+                      onClick={handleFreePlan}
+                    >
+                      {user ? "Utiliser mes 5 lettres gratuites" : "Commencer gratuitement"}
+                    </Button>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Sans carte bancaire
+                    </p>
+                  </>
+                )}
               </CardFooter>
             </Card>
           ))}

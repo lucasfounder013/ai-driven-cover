@@ -1,9 +1,18 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const FREE_GENERATION_LIMIT = 5;
+
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[GENERATE-COVER-LETTER] ${step}${detailsStr}`);
 };
 
 serve(async (req) => {
@@ -11,7 +20,89 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseClient = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
+  );
+
   try {
+    // Get user from auth header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("No authorization header provided");
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    const user = userData.user;
+    if (!user) throw new Error("User not authenticated");
+
+    logStep("User authenticated", { userId: user.id, email: user.email });
+
+    // Check subscription status
+    let hasActiveSubscription = false;
+    
+    // First check from profile
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('has_active_subscription, total_generations_count')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      logStep("Error fetching profile", { error: profileError.message });
+    }
+
+    const currentGenerations = profile?.total_generations_count ?? 0;
+    hasActiveSubscription = profile?.has_active_subscription ?? false;
+
+    // Double-check with Stripe if not subscribed (in case webhook missed)
+    if (!hasActiveSubscription && user.email) {
+      const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+      if (stripeKey) {
+        try {
+          const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+          const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+          
+          if (customers.data.length > 0) {
+            const subscriptions = await stripe.subscriptions.list({
+              customer: customers.data[0].id,
+              status: "active",
+              limit: 1,
+            });
+            
+            if (subscriptions.data.length > 0) {
+              hasActiveSubscription = true;
+              // Update profile
+              await supabaseClient
+                .from('profiles')
+                .update({ has_active_subscription: true })
+                .eq('id', user.id);
+              logStep("Stripe subscription found and profile updated");
+            }
+          }
+        } catch (stripeError) {
+          logStep("Stripe check error (non-blocking)", { error: stripeError });
+        }
+      }
+    }
+
+    logStep("Subscription check complete", { hasActiveSubscription, currentGenerations });
+
+    // Check quota for free users
+    if (!hasActiveSubscription && currentGenerations >= FREE_GENERATION_LIMIT) {
+      logStep("Free limit reached", { currentGenerations, limit: FREE_GENERATION_LIMIT });
+      return new Response(
+        JSON.stringify({ error: "FREE_LIMIT_REACHED" }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // 🔹 Récupération des données envoyées par le frontend
     const { jobTitle, companyName, jobDescription, cvPdfBase64, profileInfo } = await req.json();
 
@@ -20,7 +111,7 @@ serve(async (req) => {
       throw new Error("ANTHROPIC_API_KEY is not configured");
     }
 
-    console.log("🧠 Generating cover letter for:", jobTitle, "at", companyName);
+    logStep("Generating cover letter", { jobTitle, companyName });
 
     // === SYSTEM PROMPT ===
     const systemPrompt = `
@@ -212,6 +303,20 @@ Contraintes :
 
     const followupEmailData = await followupEmailResponse.json();
     const followupEmail = followupEmailData?.content?.[0]?.text ?? "";
+
+    // Increment generation count for free users
+    if (!hasActiveSubscription) {
+      const { error: updateError } = await supabaseClient
+        .from('profiles')
+        .update({ total_generations_count: currentGenerations + 1 })
+        .eq('id', user.id);
+      
+      if (updateError) {
+        logStep("Error updating generation count", { error: updateError.message });
+      } else {
+        logStep("Generation count incremented", { newCount: currentGenerations + 1 });
+      }
+    }
 
     // === RÉPONSE ===
     return new Response(

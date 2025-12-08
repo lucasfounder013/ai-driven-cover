@@ -130,12 +130,15 @@ export type Database = {
           email: string | null
           first_name: string | null
           full_name: string | null
+          has_active_subscription: boolean
           id: string
           last_name: string | null
           linkedin_url: string | null
           phone_number: string | null
           professional_email: string | null
           profile_completed: boolean | null
+          subscription_end_date: string | null
+          total_generations_count: number
           updated_at: string
         }
         Insert: {
@@ -148,12 +151,15 @@ export type Database = {
           email?: string | null
           first_name?: string | null
           full_name?: string | null
+          has_active_subscription?: boolean
           id: string
           last_name?: string | null
           linkedin_url?: string | null
           phone_number?: string | null
           professional_email?: string | null
           profile_completed?: boolean | null
+          subscription_end_date?: string | null
+          total_generations_count?: number
           updated_at?: string
         }
         Update: {
@@ -166,12 +172,15 @@ export type Database = {
           email?: string | null
           first_name?: string | null
           full_name?: string | null
+          has_active_subscription?: boolean
           id?: string
           last_name?: string | null
           linkedin_url?: string | null
           phone_number?: string | null
           professional_email?: string | null
           profile_completed?: boolean | null
+          subscription_end_date?: string | null
+          total_generations_count?: number
           updated_at?: string
         }
         Relationships: []

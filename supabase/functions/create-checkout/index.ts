@@ -52,6 +52,7 @@ serve(async (req) => {
       logStep("Existing customer found", { customerId });
     }
 
+    // No trial period - immediate payment
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -62,9 +63,6 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      subscription_data: {
-        trial_period_days: 7,
-      },
       success_url: `https://jobboost.fr/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `https://jobboost.fr/tarifs`,
     });
