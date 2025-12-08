@@ -80,12 +80,12 @@ const Tarifs = () => {
 
     try {
       console.log("Calling create-checkout with priceId:", priceId);
-      
+
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { priceId },
       });
 
-      console.log("Response:", { data, error });
+      console.log("create-checkout response", { data, error });
 
       if (error) {
         console.error("Invoke error:", error);
@@ -100,7 +100,6 @@ const Tarifs = () => {
             description: "Veuillez vous reconnecter pour continuer.",
             variant: "destructive",
           });
-          setLoadingPrice(null);
           navigate("/auth");
           return;
         }
@@ -108,25 +107,28 @@ const Tarifs = () => {
       }
 
       if (data?.url) {
-        console.log("Redirecting to:", data.url);
-        // Use window.open with _self for more reliable redirect
-        const opened = window.open(data.url, "_self");
-        if (!opened) {
-          // Fallback: direct assignment
-          window.location.assign(data.url);
-        }
+        console.log("Redirecting to Stripe Checkout:", data.url);
+        // Redirection simple et fiable
+        window.location.assign(data.url);
         return;
-      } else {
-        console.error("No URL in response:", data);
-        throw new Error("Aucune URL de paiement reçue");
       }
-    } catch (error: any) {
-      console.error("Checkout error:", error);
+
+      console.error("No URL in response:", data);
       toast({
         title: "Erreur",
-        description: error.message || "Une erreur est survenue lors de la création de la session de paiement.",
+        description: "Aucune URL de paiement reçue depuis Stripe.",
         variant: "destructive",
       });
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+      toast({
+        title: "Erreur",
+        description: err?.message || "Une erreur est survenue lors de la création de la session de paiement.",
+        variant: "destructive",
+      });
+    } finally {
+      // En pratique on quitte la page si la redirection fonctionne,
+      // mais on remet à zéro pour les cas d’erreur.
       setLoadingPrice(null);
     }
   };
@@ -136,11 +138,10 @@ const Tarifs = () => {
       <div className="container mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Choisis ton abonnement JobBoost
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Choisis ton abonnement JobBoost</h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Obtiens plus d'entretiens, plus vite — grâce à des candidatures professionnelles prêtes en quelques secondes.
+            Obtiens plus d&apos;entretiens, plus vite — grâce à des candidatures professionnelles prêtes en quelques
+            secondes.
           </p>
         </div>
 
@@ -150,8 +151,8 @@ const Tarifs = () => {
             <Card
               key={key}
               className={`relative border-2 transition-all duration-300 hover:shadow-2xl ${
-                plan.isBestChoice 
-                  ? "border-primary shadow-xl shadow-primary/10 scale-[1.02]" 
+                plan.isBestChoice
+                  ? "border-primary shadow-xl shadow-primary/10 scale-[1.02]"
                   : "border-border hover:border-primary/50 shadow-lg"
               }`}
             >
@@ -161,20 +162,16 @@ const Tarifs = () => {
                   Meilleur choix
                 </Badge>
               )}
-              
+
               <CardHeader className="text-center pb-4 pt-8">
-                <CardTitle className="text-2xl font-bold text-foreground">
-                  {plan.name}
-                </CardTitle>
-                <CardDescription className="text-muted-foreground mt-2">
-                  {plan.subtitle}
-                </CardDescription>
+                <CardTitle className="text-2xl font-bold text-foreground">{plan.name}</CardTitle>
+                <CardDescription className="text-muted-foreground mt-2">{plan.subtitle}</CardDescription>
                 <div className="mt-6">
                   <span className="text-5xl md:text-6xl font-bold text-primary">{plan.price}</span>
                   <span className="text-lg text-muted-foreground">{plan.period}</span>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="pb-6">
                 <ul className="space-y-3">
                   {plan.features.map((feature, index) => (
@@ -185,13 +182,13 @@ const Tarifs = () => {
                   ))}
                 </ul>
               </CardContent>
-              
+
               <CardFooter className="flex flex-col gap-3">
                 <Button
                   className="w-full"
                   size="lg"
                   onClick={() => handleSubscribe(plan.priceId)}
-                  disabled={loadingPrice !== null}
+                  disabled={loadingPrice === plan.priceId}
                 >
                   {loadingPrice === plan.priceId ? (
                     <>
@@ -212,22 +209,16 @@ const Tarifs = () => {
 
         {/* Testimonials Section */}
         <div className="max-w-5xl mx-auto mb-16">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-10">
-            Ils utilisent JobBoost
-          </h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-10">Ils utilisent JobBoost</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {TESTIMONIALS.map((testimonial, index) => (
               <Card key={index} className="border border-border/50 shadow-md bg-card/50">
                 <CardContent className="pt-6">
                   <Quote className="h-8 w-8 text-primary/30 mb-4" />
-                  <p className="text-foreground/90 mb-4 italic">
-                    "{testimonial.content}"
-                  </p>
+                  <p className="text-foreground/90 mb-4 italic">&quot;{testimonial.content}&quot;</p>
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-primary font-semibold text-sm">
-                        {testimonial.name.charAt(0)}
-                      </span>
+                      <span className="text-primary font-semibold text-sm">{testimonial.name.charAt(0)}</span>
                     </div>
                     <div>
                       <p className="font-semibold text-foreground text-sm">{testimonial.name}</p>
