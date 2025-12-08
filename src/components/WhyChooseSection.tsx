@@ -3,20 +3,20 @@ import { Shield, Zap, FileText } from "lucide-react";
 const features = [
   {
     icon: Shield,
-    title: "100% Personnalisé",
-    description: "Chaque lettre est unique et adaptée à votre profil et au poste visé",
+    title: "Lettres personnalisées",
+    description: "Des lettres adaptées à votre CV et au poste visé",
     iconColor: "text-[hsl(234,70%,60%)]",
   },
   {
     icon: Zap,
     title: "Rapide et efficace",
-    description: "Générez une lettre professionnelle en moins de 2 minutes",
+    description: "Une candidature complète générée en 30 secondes",
     iconColor: "text-[hsl(234,70%,60%)]",
   },
   {
     icon: FileText,
-    title: "Modifiable à volonté",
-    description: "Ajustez le contenu généré selon vos préférences avec notre éditeur",
+    title: "Suivi et emails inclus",
+    description: "Suivi simple de vos candidatures. Emails de candidature et relance inclus",
     iconColor: "text-[hsl(234,70%,60%)]",
   },
 ];
