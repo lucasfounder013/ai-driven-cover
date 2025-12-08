@@ -52,22 +52,26 @@ const WhyChooseSection = () => {
 
             {/* Right: Example Card */}
             <div className="bg-card rounded-2xl p-8 shadow-[var(--shadow-card)] border border-border">
-              <div className="space-y-4">
-                <div className="text-muted-foreground text-sm font-mono">
-                  // Exemple de génération
+              <div className="space-y-6">
+                {/* Header */}
+                <div className="text-center border-b border-border pb-4">
+                  <h4 className="text-xl font-bold text-foreground tracking-wide">NOM PRÉNOM</h4>
+                  <p className="text-muted-foreground italic text-sm mt-1">Stage</p>
                 </div>
-                <div className="space-y-3 text-sm">
-                  <p className="text-[hsl(234,70%,60%)] font-medium">
-                    Madame, Monsieur,
+                
+                {/* Job Title */}
+                <div className="text-center">
+                  <p className="text-foreground font-semibold text-sm leading-snug">
+                    STAGE - Chargé-e d'engagement et valorisation RSE - Janvier 2026 - (H/F) (Vinco)
                   </p>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Actuellement [votre situation], je me permets de vous adresser ma candidature pour le poste de [intitulé]...
+                </div>
+                
+                {/* Letter Content */}
+                <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>Madame, Monsieur,</p>
+                  <p>
+                    Actuellement en dernière année à Chimie ParisTech, je suis à la recherche d'un stage de fin d'études à partir de février 2026 et je suis vivement intéressé par le poste de Chargé d'engagement et valorisation RSE au sein de Vinco. Mon parcours d'ingénieur en chimie, complété par une sensibilité marquée pour les enjeux de développement durable, me permet d'envisager ce stage comme une opportunité d'allier expertise scientifique et engagement sociétal.
                   </p>
-                  <div className="flex gap-1.5 pt-2">
-                    <div className="w-2 h-2 rounded-full bg-[hsl(234,70%,60%)]"></div>
-                    <div className="w-2 h-2 rounded-full bg-[hsl(234,70%,60%)]"></div>
-                    <div className="w-2 h-2 rounded-full bg-[hsl(234,70%,60%)]"></div>
-                  </div>
                 </div>
               </div>
             </div>
