@@ -1,36 +1,20 @@
 import LegalLayout from "@/components/LegalLayout";
 
+const CONTENT = () => (
+  <>
+    <p className="text-muted-foreground italic">COLLER ICI LE CONTENU DES CONDITIONS GÉNÉRALES D'UTILISATION</p>
+    <h2>Article 1 — Objet</h2>
+    <p>[Contenu à compléter]</p>
+    <h2>Article 2 — Accès au service</h2>
+    <p>[Contenu à compléter]</p>
+    <h2>Article 3 — Responsabilités de l'utilisateur</h2>
+    <p>[Contenu à compléter]</p>
+  </>
+);
+
 const CGU = () => (
   <LegalLayout title="Conditions Générales d'Utilisation">
-    <h2>1. Accès au service</h2>
-    <p>Le site est accessible à tout utilisateur disposant d'un accès internet.</p>
-
-    <h2>2. Utilisation</h2>
-    <p>L'utilisateur s'engage à fournir des informations exactes et ne pas utiliser le service à des fins illégales.</p>
-    <p>L'utilisateur s'engage à ne pas :</p>
-    <ul>
-      <li>utiliser le service à des fins frauduleuses</li>
-      <li>tenter d'accéder aux systèmes techniques du site</li>
-      <li>revendre ou exploiter commercialement les contenus générés sans autorisation</li>
-    </ul>
-    <p>L'éditeur se réserve le droit de suspendre ou supprimer un compte en cas de non-respect des présentes conditions.</p>
-
-    <h2>3. Compte utilisateur</h2>
-    <p>Certaines fonctionnalités nécessitent la création d'un compte.</p>
-    <p>L'utilisateur est responsable de ses identifiants.</p>
-
-    <h2>4. Contenus générés</h2>
-    <p>Les contenus sont générés automatiquement par IA.</p>
-    <p>Ils doivent être vérifiés et adaptés avant utilisation.</p>
-
-    <h2>5. Limitation de responsabilité</h2>
-    <p>L'éditeur ne garantit pas l'exactitude des contenus ni les résultats obtenus.</p>
-
-    <h2>6. Suspension</h2>
-    <p>Le service peut être suspendu en cas d'abus.</p>
-
-    <h2>7. Modification</h2>
-    <p>Les CGU peuvent être modifiées à tout moment.</p>
+    <CONTENT />
   </LegalLayout>
 );
 
