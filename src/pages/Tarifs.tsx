@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Loader2, Shield, Star, Quote, Sparkles } from "lucide-react";
@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import Footer from "@/components/Footer";
 
 const PLANS = {
   free: {
@@ -76,6 +78,7 @@ const TESTIMONIALS = [
 
 const Tarifs = () => {
   const [loadingPrice, setLoadingPrice] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -163,7 +166,7 @@ const Tarifs = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <div className="container mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
@@ -224,7 +227,13 @@ const Tarifs = () => {
                     <Button
                       className="w-full"
                       size="lg"
-                      onClick={() => handleSubscribe((plan as any).priceId)}
+                      onClick={() => {
+                        if (!acceptedTerms) {
+                          toast({ title: "Conditions requises", description: "Veuillez accepter les CGV et la politique de confidentialité.", variant: "destructive" });
+                          return;
+                        }
+                        handleSubscribe((plan as any).priceId);
+                      }}
                       disabled={loadingPrice === (plan as any).priceId}
                     >
                       {loadingPrice === (plan as any).priceId ? (
@@ -284,14 +293,30 @@ const Tarifs = () => {
           </div>
         </div>
 
+        {/* Legal Checkbox */}
+        <div className="max-w-6xl mx-auto mb-12 flex items-start gap-3 justify-center">
+          <Checkbox
+            id="accept-terms"
+            checked={acceptedTerms}
+            onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+          />
+          <label htmlFor="accept-terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+            J'accepte les{" "}
+            <Link to="/cgv" className="text-primary underline">Conditions Générales de Vente</Link>
+            {" "}et la{" "}
+            <Link to="/politique-confidentialite" className="text-primary underline">Politique de confidentialité</Link>
+          </label>
+        </div>
+
         {/* Security Footer */}
-        <div className="text-center">
+        <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <Shield className="h-5 w-5" />
             <span>Paiement sécurisé via Stripe • Annulation à tout moment</span>
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

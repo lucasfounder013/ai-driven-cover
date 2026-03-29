@@ -11,6 +11,12 @@ import ResetPassword from "./pages/ResetPassword";
 import Tarifs from "./pages/Tarifs";
 import Success from "./pages/Success";
 import NotFound from "./pages/NotFound";
+import MentionsLegales from "./pages/MentionsLegales";
+import CGV from "./pages/CGV";
+import CGU from "./pages/CGU";
+import PolitiqueConfidentialite from "./pages/PolitiqueConfidentialite";
+import Cookies from "./pages/Cookies";
+import CookieBanner from "./components/CookieBanner";
 
 const queryClient = new QueryClient();
 
@@ -28,9 +34,14 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/tarifs" element={<Tarifs />} />
           <Route path="/success" element={<Success />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/mentions-legales" element={<MentionsLegales />} />
+          <Route path="/cgv" element={<CGV />} />
+          <Route path="/cgu" element={<CGU />} />
+          <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
+          <Route path="/cookies" element={<Cookies />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <CookieBanner />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
