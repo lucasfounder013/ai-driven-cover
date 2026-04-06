@@ -1,20 +1,15 @@
 import LegalLayout from "@/components/LegalLayout";
 
-const CONTENT = () => (
+const Content = () => (
   <>
-    <p className="text-muted-foreground italic">COLLER ICI LE CONTENU DE LA POLITIQUE DE COOKIES</p>
-    <h2>Qu'est-ce qu'un cookie ?</h2>
-    <p>[Contenu à compléter]</p>
-    <h2>Cookies utilisés</h2>
-    <p>[Contenu à compléter]</p>
-    <h2>Gestion des cookies</h2>
-    <p>[Contenu à compléter]</p>
+    <p>Le site peut utiliser des cookies pour améliorer l’expérience utilisateur.</p>
+    <p>L’utilisateur peut accepter ou refuser les cookies via une bannière dédiée.</p>
   </>
 );
 
 const Cookies = () => (
   <LegalLayout title="Politique de cookies">
-    <CONTENT />
+    <Content />
   </LegalLayout>
 );
 
