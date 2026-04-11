@@ -138,7 +138,11 @@ export type Database = {
           phone_number: string | null
           professional_email: string | null
           profile_completed: boolean | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           subscription_end_date: string | null
+          subscription_plan: string | null
+          subscription_status: string
           total_generations_count: number
           updated_at: string
         }
@@ -160,7 +164,11 @@ export type Database = {
           phone_number?: string | null
           professional_email?: string | null
           profile_completed?: boolean | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subscription_end_date?: string | null
+          subscription_plan?: string | null
+          subscription_status?: string
           total_generations_count?: number
           updated_at?: string
         }
@@ -182,7 +190,11 @@ export type Database = {
           phone_number?: string | null
           professional_email?: string | null
           profile_completed?: boolean | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subscription_end_date?: string | null
+          subscription_plan?: string | null
+          subscription_status?: string
           total_generations_count?: number
           updated_at?: string
         }
