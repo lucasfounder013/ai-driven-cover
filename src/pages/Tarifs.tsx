@@ -185,16 +185,25 @@ const Tarifs = () => {
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-20">
-          {Object.entries(PLANS).map(([key, plan]) => (
+          {Object.entries(PLANS).map(([key, plan]) => {
+            const isCurrent = isCurrentPlan(key);
+            return (
             <Card
               key={key}
               className={`relative border-2 transition-all duration-300 hover:shadow-2xl ${
-                plan.isBestChoice
+                isCurrent
+                  ? "border-primary shadow-xl shadow-primary/10 ring-2 ring-primary/20"
+                  : plan.isBestChoice
                   ? "border-primary shadow-xl shadow-primary/10 scale-[1.02]"
                   : "border-border hover:border-primary/50 shadow-lg"
               }`}
             >
-              {plan.isBestChoice && (
+              {isCurrent ? (
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 text-sm font-semibold">
+                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                  Votre plan actuel
+                </Badge>
+              ) : plan.isBestChoice && (
                 <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 text-sm font-semibold">
                   <Star className="h-3.5 w-3.5 mr-1.5 fill-current" />
                   Meilleur choix
