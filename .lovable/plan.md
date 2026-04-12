@@ -1,47 +1,34 @@
 
 
-## Plan de correction : Abonnements Stripe
+## Plan de correction
 
-### Problème racine
-1. **Le webhook `stripe-webhook` n'est pas configuré dans Stripe** → la base de données n'est jamais mise à jour après paiement
-2. **`check-subscription` échoue** avec "missing sub claim" → le frontend ne peut pas lire le statut
-3. **Le bouton "Gérer mon abonnement"** est masqué car `subscribed` est toujours `false`
+### Problème 1 : `check-subscription` crashe avec "Invalid time value"
+La fonction trouve bien ton abonnement Stripe actif mais plante en construisant la date `subscription_end`. L'API Stripe (version `2025-08-27.basil`) retourne possiblement `current_period_end` dans un format inattendu. Il faut ajouter une protection autour de la conversion de date.
 
-### Étapes de correction
+**Fichier** : `supabase/functions/check-subscription/index.ts`
+- Ajouter un try/catch autour de `new Date(subscription.current_period_end * 1000)` avec un fallback à `null`
+- Logger la valeur brute de `current_period_end` pour comprendre le format
 
-#### Étape 1 — Configurer le webhook dans Stripe Dashboard
-Action manuelle requise de ta part :
-- Va dans [Stripe Dashboard → Webhooks](https://dashboard.stripe.com/webhooks)
-- Ajoute un endpoint avec l'URL : `https://kyqzdmysziiqvxyxdind.supabase.co/functions/v1/stripe-webhook`
-- Sélectionne les événements : `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
-- Copie le "Signing secret" généré (commence par `whsec_...`)
-- Vérifie que la valeur du secret `STRIPE_WEBHOOK_SECRET` correspond bien à ce signing secret (si tu en as créé un nouveau, il faudra mettre à jour le secret)
+### Problème 2 : Le webhook n'est jamais appelé
+Aucun log = Stripe n'envoie rien à ton endpoint. Causes possibles :
+- URL incorrecte dans le Stripe Dashboard
+- Événements non sélectionnés
+- Le webhook pointe vers l'ancienne URL
 
-#### Étape 2 — Corriger `check-subscription`
-L'erreur "missing sub claim" vient de l'utilisation de `supabaseClient.auth.getUser(token)` avec le service role client. La correction :
-- Utiliser `SUPABASE_ANON_KEY` au lieu de `SUPABASE_SERVICE_ROLE_KEY` pour le client d'authentification, ou
-- Créer un second client avec l'anon key uniquement pour valider le token utilisateur
-- Garder le service role client pour les opérations d'écriture sur `profiles`
+**Action manuelle** : Vérifie dans ton [Stripe Dashboard → Webhooks](https://dashboard.stripe.com/webhooks) que :
+- L'URL est exactement : `https://kyqzdmysziiqvxyxdind.supabase.co/functions/v1/stripe-webhook`
+- Les 3 événements sont cochés : `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+- Le statut du webhook est "Enabled" (pas "Disabled")
+- Si tu vois des tentatives échouées dans l'onglet "Attempts", partage l'erreur
 
-**Fichier modifié** : `supabase/functions/check-subscription/index.ts`
+### Problème 3 : Mise à jour immédiate de la base
+Même une fois `check-subscription` corrigé, la DB n'a jamais été mise à jour pour ton abonnement actuel. La correction de la fonction résoudra cela au prochain appel (chargement du Dashboard).
 
-#### Étape 3 — Ajouter un fallback direct en base
-Modifier `useAuth.tsx` pour qu'en cas d'échec de `check-subscription`, le frontend lise directement `subscription_status` et `has_active_subscription` depuis la table `profiles` via le client Supabase. Cela garantit que même si la Edge Function échoue, le statut est affiché correctement.
-
-**Fichier modifié** : `src/hooks/useAuth.tsx`
-
-#### Étape 4 — Adapter `SubscriptionSection` aux nouvelles colonnes
-Utiliser `subscription_plan` pour afficher "Hebdomadaire" ou "Mensuel" au lieu du générique "Premium". Le bouton "Gérer mon abonnement" sera visible dès que le statut est actif.
-
-**Fichier modifié** : `src/components/SubscriptionSection.tsx`
-
-### Résumé des fichiers modifiés
+### Résumé des modifications
 | Fichier | Modification |
 |---|---|
-| `supabase/functions/check-subscription/index.ts` | Corriger l'authentification du token utilisateur |
-| `src/hooks/useAuth.tsx` | Ajouter fallback direct sur `profiles` |
-| `src/components/SubscriptionSection.tsx` | Afficher le nom du plan (hebdo/mensuel) |
+| `supabase/functions/check-subscription/index.ts` | Protéger la conversion de date, logger `current_period_end` brut |
 
-### Action manuelle requise
-Tu devras configurer le webhook dans le Stripe Dashboard (Étape 1) pour que les paiements futurs mettent à jour la base de données en temps réel.
+### Résultat attendu
+Après le fix, le prochain chargement du Dashboard appellera `check-subscription`, qui mettra à jour `profiles` avec `subscription_status = 'active'`, `subscription_plan = 'weekly'`, et le Dashboard affichera "Hebdomadaire" au lieu de "Gratuit".
 
