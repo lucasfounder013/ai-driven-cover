@@ -81,7 +81,13 @@ const Tarifs = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, subscriptionStatus } = useAuth();
+  const currentPlan = subscriptionStatus?.subscriptionPlan;
+
+  const isCurrentPlan = (planKey: string) => {
+    if (!subscriptionStatus?.subscribed) return false;
+    return planKey === currentPlan;
+  };
 
   const handleSubscribe = async (priceId: string) => {
     if (!user) {
