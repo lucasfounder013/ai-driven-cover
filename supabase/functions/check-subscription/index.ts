@@ -90,7 +90,24 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      
+      // Log raw value for debugging
+      logStep("Raw current_period_end", { value: subscription.current_period_end, type: typeof subscription.current_period_end });
+      
+      try {
+        const periodEnd = Number(subscription.current_period_end);
+        if (!isNaN(periodEnd) && periodEnd > 0) {
+          subscriptionEnd = new Date(periodEnd * 1000).toISOString();
+        } else {
+          logStep("current_period_end is not a valid number, trying direct Date parse");
+          const directDate = new Date(subscription.current_period_end);
+          if (!isNaN(directDate.getTime())) {
+            subscriptionEnd = directDate.toISOString();
+          }
+        }
+      } catch (dateError) {
+        logStep("Failed to convert current_period_end to date", { error: String(dateError) });
+      }
       
       const priceId = subscription.items.data[0]?.price?.id;
       if (priceId === 'price_1Saae7JDrYaA8zu3ZPwQyUhc') {
