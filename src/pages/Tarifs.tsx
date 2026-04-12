@@ -238,32 +238,49 @@ const Tarifs = () => {
 
               <CardFooter className="flex flex-col gap-3">
                 {plan.isPaid ? (
-                  <>
-                    <Button
-                      className="w-full"
-                      size="lg"
-                      onClick={() => {
-                        if (!acceptedTerms) {
-                          toast({ title: "Conditions requises", description: "Veuillez accepter les CGV et la politique de confidentialité.", variant: "destructive" });
-                          return;
-                        }
-                        handleSubscribe((plan as any).priceId);
-                      }}
-                      disabled={loadingPrice === (plan as any).priceId}
-                    >
-                      {loadingPrice === (plan as any).priceId ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Chargement...
-                        </>
-                      ) : (
-                        `Débloquer l'illimité (${plan.name.toLowerCase()})`
-                      )}
-                    </Button>
-                    <p className="text-sm text-muted-foreground text-center">
-                      Annulation à tout moment
-                    </p>
-                  </>
+                  isCurrent ? (
+                    <>
+                      <Button
+                        className="w-full"
+                        size="lg"
+                        variant="secondary"
+                        disabled
+                      >
+                        <Check className="mr-2 h-4 w-4" />
+                        Plan actuel
+                      </Button>
+                      <p className="text-sm text-muted-foreground text-center">
+                        Gérez votre abonnement depuis votre profil
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        className="w-full"
+                        size="lg"
+                        onClick={() => {
+                          if (!acceptedTerms) {
+                            toast({ title: "Conditions requises", description: "Veuillez accepter les CGV et la politique de confidentialité.", variant: "destructive" });
+                            return;
+                          }
+                          handleSubscribe((plan as any).priceId);
+                        }}
+                        disabled={loadingPrice === (plan as any).priceId}
+                      >
+                        {loadingPrice === (plan as any).priceId ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Chargement...
+                          </>
+                        ) : (
+                          `Débloquer l'illimité (${plan.name.toLowerCase()})`
+                        )}
+                      </Button>
+                      <p className="text-sm text-muted-foreground text-center">
+                        Annulation à tout moment
+                      </p>
+                    </>
+                  )
                 ) : (
                   <>
                     <Button
@@ -281,7 +298,8 @@ const Tarifs = () => {
                 )}
               </CardFooter>
             </Card>
-          ))}
+            );
+          })}
         </div>
 
         {/* Testimonials Section */}
