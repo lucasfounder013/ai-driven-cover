@@ -10,10 +10,11 @@ import { useToast } from "@/hooks/use-toast";
 interface SubscriptionSectionProps {
   subscribed: boolean;
   subscriptionEnd: string | null;
+  subscriptionPlan?: string | null;
   userId: string;
 }
 
-const SubscriptionSection = ({ subscribed, subscriptionEnd, userId }: SubscriptionSectionProps) => {
+const SubscriptionSection = ({ subscribed, subscriptionEnd, subscriptionPlan, userId }: SubscriptionSectionProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [totalGenerations, setTotalGenerations] = useState<number>(0);
@@ -28,7 +29,6 @@ const SubscriptionSection = ({ subscribed, subscriptionEnd, userId }: Subscripti
           .select("total_generations_count")
           .eq("id", userId)
           .single();
-
         if (error) throw error;
         setTotalGenerations(data?.total_generations_count || 0);
       } catch (error) {
@@ -37,7 +37,6 @@ const SubscriptionSection = ({ subscribed, subscriptionEnd, userId }: Subscripti
         setLoading(false);
       }
     };
-
     fetchGenerationsCount();
   }, [userId]);
 
@@ -45,9 +44,7 @@ const SubscriptionSection = ({ subscribed, subscriptionEnd, userId }: Subscripti
     setLoadingPortal(true);
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
-
       if (error) throw error;
-
       if (data?.url) {
         window.location.assign(data.url);
       } else {
@@ -55,11 +52,7 @@ const SubscriptionSection = ({ subscribed, subscriptionEnd, userId }: Subscripti
       }
     } catch (error: any) {
       console.error("Error opening customer portal:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'ouvrir le portail de gestion.",
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: "Impossible d'ouvrir le portail de gestion.", variant: "destructive" });
     } finally {
       setLoadingPortal(false);
     }
@@ -67,16 +60,13 @@ const SubscriptionSection = ({ subscribed, subscriptionEnd, userId }: Subscripti
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("fr-FR", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+    return date.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
   };
 
   const getPlanName = () => {
     if (!subscribed) return "Gratuit";
-    // Could be extended to differentiate between weekly/monthly if needed
+    if (subscriptionPlan === "weekly") return "Hebdomadaire";
+    if (subscriptionPlan === "monthly") return "Mensuel";
     return "Premium";
   };
 

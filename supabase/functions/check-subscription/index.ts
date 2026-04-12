@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const logStep = (step: string, details?: any) => {
@@ -17,7 +17,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
+  // Auth client with anon key for token validation
+  const supabaseAuth = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+  );
+
+  // Service role client for DB writes
+  const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     { auth: { persistSession: false } }
@@ -37,7 +44,7 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     logStep("Authenticating user with token");
     
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    const { data: userData, error: userError } = await supabaseAuth.auth.getUser(token);
     if (userError) throw new Error(`Authentication error: ${userError.message}`);
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
@@ -49,18 +56,19 @@ serve(async (req) => {
     if (customers.data.length === 0) {
       logStep("No customer found, user is on free plan");
       
-      // Update profile to reflect no subscription
-      await supabaseClient
+      await supabaseAdmin
         .from('profiles')
         .update({ 
           has_active_subscription: false,
+          subscription_status: 'free',
           subscription_end_date: null 
         })
         .eq('id', user.id);
 
       return new Response(JSON.stringify({ 
         subscribed: false,
-        subscription_end: null 
+        subscription_end: null,
+        subscription_plan: null
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -78,29 +86,44 @@ serve(async (req) => {
     
     const hasActiveSub = subscriptions.data.length > 0;
     let subscriptionEnd = null;
+    let subscriptionPlan = null;
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
+      
+      const priceId = subscription.items.data[0]?.price?.id;
+      if (priceId === 'price_1Saae7JDrYaA8zu3ZPwQyUhc') {
+        subscriptionPlan = 'weekly';
+      } else if (priceId === 'price_1SaadvJDrYaA8zu34NVADeb3') {
+        subscriptionPlan = 'monthly';
+      } else {
+        subscriptionPlan = 'premium';
+      }
+      
+      logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd, plan: subscriptionPlan });
     } else {
       logStep("No active subscription found");
     }
 
     // Update profile with subscription status
-    await supabaseClient
+    await supabaseAdmin
       .from('profiles')
       .update({ 
         has_active_subscription: hasActiveSub,
-        subscription_end_date: subscriptionEnd 
+        subscription_status: hasActiveSub ? 'active' : 'free',
+        subscription_end_date: subscriptionEnd,
+        subscription_plan: subscriptionPlan,
+        stripe_customer_id: customerId
       })
       .eq('id', user.id);
 
-    logStep("Profile updated with subscription status", { hasActiveSub, subscriptionEnd });
+    logStep("Profile updated", { hasActiveSub, subscriptionEnd, subscriptionPlan });
 
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
-      subscription_end: subscriptionEnd
+      subscription_end: subscriptionEnd,
+      subscription_plan: subscriptionPlan
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
