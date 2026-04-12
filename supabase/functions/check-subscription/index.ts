@@ -90,7 +90,33 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      
+      // Log full subscription object keys for debugging
+      logStep("Subscription keys", { keys: Object.keys(subscription) });
+      logStep("Subscription item keys", { keys: subscription.items?.data?.[0] ? Object.keys(subscription.items.data[0]) : 'no items' });
+      
+      // Try multiple possible locations for period end
+      const rawPeriodEnd = (subscription as any).current_period_end 
+        ?? subscription.items?.data?.[0]?.current_period_end
+        ?? null;
+      
+      logStep("Raw period end value", { value: rawPeriodEnd, type: typeof rawPeriodEnd });
+      
+      if (rawPeriodEnd) {
+        try {
+          const periodEnd = Number(rawPeriodEnd);
+          if (!isNaN(periodEnd) && periodEnd > 0) {
+            subscriptionEnd = new Date(periodEnd * 1000).toISOString();
+          } else {
+            const directDate = new Date(rawPeriodEnd);
+            if (!isNaN(directDate.getTime())) {
+              subscriptionEnd = directDate.toISOString();
+            }
+          }
+        } catch (dateError) {
+          logStep("Failed to convert period end to date", { error: String(dateError) });
+        }
+      }
       
       const priceId = subscription.items.data[0]?.price?.id;
       if (priceId === 'price_1Saae7JDrYaA8zu3ZPwQyUhc') {
