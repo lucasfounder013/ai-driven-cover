@@ -81,7 +81,13 @@ const Tarifs = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, subscriptionStatus } = useAuth();
+  const currentPlan = subscriptionStatus?.subscriptionPlan;
+
+  const isCurrentPlan = (planKey: string) => {
+    if (!subscriptionStatus?.subscribed) return false;
+    return planKey === currentPlan;
+  };
 
   const handleSubscribe = async (priceId: string) => {
     if (!user) {
@@ -179,16 +185,25 @@ const Tarifs = () => {
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-20">
-          {Object.entries(PLANS).map(([key, plan]) => (
+          {Object.entries(PLANS).map(([key, plan]) => {
+            const isCurrent = isCurrentPlan(key);
+            return (
             <Card
               key={key}
               className={`relative border-2 transition-all duration-300 hover:shadow-2xl ${
-                plan.isBestChoice
+                isCurrent
+                  ? "border-primary shadow-xl shadow-primary/10 ring-2 ring-primary/20"
+                  : plan.isBestChoice
                   ? "border-primary shadow-xl shadow-primary/10 scale-[1.02]"
                   : "border-border hover:border-primary/50 shadow-lg"
               }`}
             >
-              {plan.isBestChoice && (
+              {isCurrent ? (
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 text-sm font-semibold">
+                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                  Votre plan actuel
+                </Badge>
+              ) : plan.isBestChoice && (
                 <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 text-sm font-semibold">
                   <Star className="h-3.5 w-3.5 mr-1.5 fill-current" />
                   Meilleur choix
@@ -223,32 +238,49 @@ const Tarifs = () => {
 
               <CardFooter className="flex flex-col gap-3">
                 {plan.isPaid ? (
-                  <>
-                    <Button
-                      className="w-full"
-                      size="lg"
-                      onClick={() => {
-                        if (!acceptedTerms) {
-                          toast({ title: "Conditions requises", description: "Veuillez accepter les CGV et la politique de confidentialité.", variant: "destructive" });
-                          return;
-                        }
-                        handleSubscribe((plan as any).priceId);
-                      }}
-                      disabled={loadingPrice === (plan as any).priceId}
-                    >
-                      {loadingPrice === (plan as any).priceId ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Chargement...
-                        </>
-                      ) : (
-                        `Débloquer l'illimité (${plan.name.toLowerCase()})`
-                      )}
-                    </Button>
-                    <p className="text-sm text-muted-foreground text-center">
-                      Annulation à tout moment
-                    </p>
-                  </>
+                  isCurrent ? (
+                    <>
+                      <Button
+                        className="w-full"
+                        size="lg"
+                        variant="secondary"
+                        disabled
+                      >
+                        <Check className="mr-2 h-4 w-4" />
+                        Plan actuel
+                      </Button>
+                      <p className="text-sm text-muted-foreground text-center">
+                        Gérez votre abonnement depuis votre profil
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        className="w-full"
+                        size="lg"
+                        onClick={() => {
+                          if (!acceptedTerms) {
+                            toast({ title: "Conditions requises", description: "Veuillez accepter les CGV et la politique de confidentialité.", variant: "destructive" });
+                            return;
+                          }
+                          handleSubscribe((plan as any).priceId);
+                        }}
+                        disabled={loadingPrice === (plan as any).priceId}
+                      >
+                        {loadingPrice === (plan as any).priceId ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Chargement...
+                          </>
+                        ) : (
+                          `Débloquer l'illimité (${plan.name.toLowerCase()})`
+                        )}
+                      </Button>
+                      <p className="text-sm text-muted-foreground text-center">
+                        Annulation à tout moment
+                      </p>
+                    </>
+                  )
                 ) : (
                   <>
                     <Button
@@ -266,7 +298,8 @@ const Tarifs = () => {
                 )}
               </CardFooter>
             </Card>
-          ))}
+            );
+          })}
         </div>
 
         {/* Testimonials Section */}
