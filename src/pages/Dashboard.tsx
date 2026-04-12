@@ -453,6 +453,7 @@ const Dashboard = () => {
             <SubscriptionSection 
               subscribed={subscriptionStatus.subscribed} 
               subscriptionEnd={subscriptionStatus.subscriptionEnd}
+              subscriptionPlan={subscriptionStatus.subscriptionPlan}
               userId={user.id}
             />
             
