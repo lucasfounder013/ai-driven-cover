@@ -78,7 +78,8 @@ const TESTIMONIALS = [
 
 const Tarifs = () => {
   const [loadingPrice, setLoadingPrice] = useState<string | null>(null);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedTermsWeekly, setAcceptedTermsWeekly] = useState(false);
+  const [acceptedTermsMonthly, setAcceptedTermsMonthly] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, subscriptionStatus } = useAuth();
@@ -255,17 +256,31 @@ const Tarifs = () => {
                     </>
                   ) : (
                     <>
+                      <div className="flex items-start gap-2 w-full">
+                        <Checkbox
+                          id={`accept-terms-${key}`}
+                          checked={key === "weekly" ? acceptedTermsWeekly : acceptedTermsMonthly}
+                          onCheckedChange={(checked) =>
+                            key === "weekly"
+                              ? setAcceptedTermsWeekly(checked === true)
+                              : setAcceptedTermsMonthly(checked === true)
+                          }
+                        />
+                        <label htmlFor={`accept-terms-${key}`} className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                          J'accepte les{" "}
+                          <Link to="/cgv" className="text-primary underline">CGV</Link>
+                          {" "}et la{" "}
+                          <Link to="/politique-confidentialite" className="text-primary underline">Politique de confidentialité</Link>
+                        </label>
+                      </div>
                       <Button
                         className="w-full"
                         size="lg"
-                        onClick={() => {
-                          if (!acceptedTerms) {
-                            toast({ title: "Conditions requises", description: "Veuillez accepter les CGV et la politique de confidentialité.", variant: "destructive" });
-                            return;
-                          }
-                          handleSubscribe((plan as any).priceId);
-                        }}
-                        disabled={loadingPrice === (plan as any).priceId}
+                        onClick={() => handleSubscribe((plan as any).priceId)}
+                        disabled={
+                          loadingPrice === (plan as any).priceId ||
+                          (key === "weekly" ? !acceptedTermsWeekly : !acceptedTermsMonthly)
+                        }
                       >
                         {loadingPrice === (plan as any).priceId ? (
                           <>
@@ -326,20 +341,6 @@ const Tarifs = () => {
           </div>
         </div>
 
-        {/* Legal Checkbox */}
-        <div className="max-w-6xl mx-auto mb-12 flex items-start gap-3 justify-center">
-          <Checkbox
-            id="accept-terms"
-            checked={acceptedTerms}
-            onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
-          />
-          <label htmlFor="accept-terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
-            J'accepte les{" "}
-            <Link to="/cgv" className="text-primary underline">Conditions Générales de Vente</Link>
-            {" "}et la{" "}
-            <Link to="/politique-confidentialite" className="text-primary underline">Politique de confidentialité</Link>
-          </label>
-        </div>
 
         {/* Security Footer */}
         <div className="text-center mb-8">
