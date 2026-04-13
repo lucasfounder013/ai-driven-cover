@@ -1,4 +1,4 @@
-import { Rocket, LogOut, UserCircle } from "lucide-react";
+import { Rocket, LogOut, UserCircle, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
