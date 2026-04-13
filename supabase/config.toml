@@ -8,3 +8,18 @@ verify_jwt = true
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.send-email-j0]
+verify_jwt = false
+
+[functions.send-email-j1]
+verify_jwt = false
+
+[functions.send-email-j3]
+verify_jwt = false
+
+[functions.send-email-j7]
+verify_jwt = false
+
+[functions.send-email-j14]
+verify_jwt = false
