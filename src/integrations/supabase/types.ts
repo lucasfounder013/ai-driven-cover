@@ -95,6 +95,45 @@ export type Database = {
           },
         ]
       }
+      email_sequence: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          j0_sent: boolean
+          j1_sent: boolean
+          j14_sent: boolean
+          j3_sent: boolean
+          j7_sent: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id?: string
+          j0_sent?: boolean
+          j1_sent?: boolean
+          j14_sent?: boolean
+          j3_sent?: boolean
+          j7_sent?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          j0_sent?: boolean
+          j1_sent?: boolean
+          j14_sent?: boolean
+          j3_sent?: boolean
+          j7_sent?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       folders: {
         Row: {
           created_at: string
