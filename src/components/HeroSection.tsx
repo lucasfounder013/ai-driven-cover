@@ -28,7 +28,7 @@ const HeroSection = () => {
 
         {/* Subtitle */}
         <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-10 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300">
-          Notre IA génère des lettres de motivation personnalisées et professionnelles à partir de votre CV et de la description du poste
+          Notre IA génère des lettres de motivation personnalisées et professionnelles, ainsi que des mails de candidature et de relance à partir de votre CV et de la description du poste
         </p>
 
         {/* CTA Buttons */}
