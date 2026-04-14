@@ -17,10 +17,10 @@ const HeroSection = () => {
 
         {/* Heading */}
         <h1 className="text-5xl md:text-7xl font-bold text-primary leading-tight mb-6 animate-in fade-in slide-in-from-bottom-5 duration-700 delay-150">
-          Créez votre lettre de
+          Accélérez votre recherche
           <br />
           <span className="bg-gradient-to-r from-primary via-[hsl(234,60%,50%)] to-[hsl(250,70%,60%)] bg-clip-text text-transparent">
-            motivation
+            d'emploi
           </span>
           <br />
           en quelques clics
