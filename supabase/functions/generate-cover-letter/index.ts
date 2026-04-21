@@ -182,7 +182,7 @@ Chaque paragraphe doit être fluide et naturel, sans redondance.
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5",
+        model: "claude-sonnet-4-6",
         max_tokens: 2048,
         system: systemPrompt,
         messages: [{ role: "user", content }],
@@ -191,8 +191,8 @@ Chaque paragraphe doit être fluide et naturel, sans redondance.
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Anthropic error:", errorText);
-      throw new Error(`Erreur API Anthropic : ${response.status}`);
+      logStep("Anthropic API error (cover letter)", { status: response.status, body: errorText });
+      throw new Error(`Erreur API Anthropic (lettre) : ${response.status} — ${errorText}`);
     }
 
     const data = await response.json();
@@ -245,13 +245,17 @@ Contraintes :
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5",
+        model: "claude-sonnet-4-6",
         max_tokens: 1024,
         messages: [{ role: "user", content: applicationEmailContent }],
       }),
     });
 
-    const applicationEmailData = await applicationEmailResponse.json();
+    if (!applicationEmailResponse.ok) {
+      const errorText = await applicationEmailResponse.text();
+      logStep("Anthropic API error (application email)", { status: applicationEmailResponse.status, body: errorText });
+    }
+    const applicationEmailData = await applicationEmailResponse.json().catch(() => ({}));
     const applicationEmail = applicationEmailData?.content?.[0]?.text ?? "";
 
     // Email de relance - avec CV
@@ -295,13 +299,17 @@ Contraintes :
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5",
+        model: "claude-sonnet-4-6",
         max_tokens: 1024,
         messages: [{ role: "user", content: followupEmailContent }],
       }),
     });
 
-    const followupEmailData = await followupEmailResponse.json();
+    if (!followupEmailResponse.ok) {
+      const errorText = await followupEmailResponse.text();
+      logStep("Anthropic API error (followup email)", { status: followupEmailResponse.status, body: errorText });
+    }
+    const followupEmailData = await followupEmailResponse.json().catch(() => ({}));
     const followupEmail = followupEmailData?.content?.[0]?.text ?? "";
 
     // Increment generation count for free users
