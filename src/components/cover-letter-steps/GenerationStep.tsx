@@ -76,7 +76,13 @@ export const GenerationStep = ({
       const arrayBuffer = await cvData.arrayBuffer();
       const base64 = btoa(new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ""));
 
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Session invalide");
+
       const { data, error } = await supabase.functions.invoke("generate-cover-letter", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: {
           jobTitle,
           companyName,
