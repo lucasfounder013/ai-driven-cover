@@ -43,8 +43,16 @@ export const useAuth = () => {
 
   const checkSubscription = async (userId?: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('check-subscription');
-      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        if (userId) await checkSubscriptionFromDB(userId);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('check-subscription', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
       if (error) {
         console.error('Edge function failed, falling back to DB:', error);
         if (userId) await checkSubscriptionFromDB(userId);

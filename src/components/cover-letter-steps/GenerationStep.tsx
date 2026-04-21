@@ -86,9 +86,16 @@ export const GenerationStep = ({
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // 403 = FREE_LIMIT_REACHED (error.context is the raw Response, body is a ReadableStream)
+        if ((error as any).context?.status === 403) {
+          setShowPaywall(true);
+          return;
+        }
+        throw error;
+      }
 
-      // Check for free limit reached
+      // Fallback check in case the function returns 2xx with an error field
       if (data?.error === "FREE_LIMIT_REACHED") {
         setShowPaywall(true);
         return;
@@ -109,13 +116,6 @@ export const GenerationStep = ({
       });
     } catch (error: any) {
       console.error("Error generating letter:", error);
-      
-      // Check if error response contains FREE_LIMIT_REACHED
-      if (error?.message?.includes("FREE_LIMIT_REACHED") || 
-          error?.context?.body?.includes("FREE_LIMIT_REACHED")) {
-        setShowPaywall(true);
-        return;
-      }
       
       toast({
         title: "Erreur",
